@@ -1,6 +1,7 @@
 from potentials.DiscreteCondPot import *
 from graphs.BayesNet import *
 from pprint import pprint
+from DotTool import *
 
 class BnetSample:
 
@@ -8,22 +9,30 @@ class BnetSample:
                  dot_file,
                  hidden_nd_names,
                  nd_to_size=None,
-                 sample_num=1):
+                 sample_num=1,
+                 other_cond=None):
         self.dot_file = dot_file
         self.hidden_nd_names = hidden_nd_names
         self.sample_num= sample_num
         self.nd_names, self.arrows = DotTool.read_dot_file(dot_file)
-        self.nd_to_size = self.fill_nd_to_size()
+        self.nd_to_size = self.fill_nd_to_size(nd_to_size)
+        if other_cond:
+            assert isinstance(other_cond, str)
+        self.other_cond = other_cond
 
 
         self.bnet = self.create_random_bnet()
         self.name_to_nd = {name: self.bnet.get_node_named(name)
                 for name in self.nd_names}
-        self.ampu_pot, self.full_pot = self.calc_ampu_and_full_pots()
-        self.ampu_prob_y_bar_x = self.calc_prob_y_bar_x(self.ampu_pot)
-        self.full_prob_y_bar_x = self.calc_prob_y_bar_x(self.full_pot)
 
-    def fill_nd_to_size(self):
+        self.ampu_pot = None
+        self.full_pot = None
+        self.ampu_prob_y_bar_x = None
+        self.full_prob_y_bar_x = None
+        self.calc_full_and_ampu_pots()
+        self.calc_full_and_ampu_probs()
+
+    def fill_nd_to_size(self, nd_to_size):
         """
         This method compiles the list of node names from the dot file
         `dot_file`. It then produces a default dict `nd_to_size1` that maps
@@ -54,10 +63,10 @@ class BnetSample:
             assert nd_name in self.nd_names, (f"hidden node '{nd_name}'"
                                               f" not in full node list")
             nd_to_size1[nd_name] = 3
-        if self.nd_to_size:
-            for nd_name in self.nd_to_size:
+        if nd_to_size:
+            for nd_name in nd_to_size:
                 if nd_name in nd_to_size1:
-                    nd_to_size1[nd_name] = self.nd_to_size[nd_name]
+                    nd_to_size1[nd_name] = nd_to_size[nd_name]
         return nd_to_size1
 
     def create_random_bnet(self):
@@ -145,12 +154,11 @@ class BnetSample:
             nd = self.bnet.get_node_named(name)
             nd.potential.set_to_random()
             nd.potential.normalize_self()
-        self.ampu_pot, self.full_pot = self.calc_ampu_and_full_pots()
-        self.ampu_prob_y_bar_x = self.calc_prob_y_bar_x(self.ampu_pot)
-        self.full_prob_y_bar_x = self.calc_prob_y_bar_x(self.full_pot)
+        self.calc_full_and_ampu_pots()
+        self.calc_full_and_ampu_probs()
 
 
-    def calc_ampu_and_full_pots(self):
+    def calc_full_and_ampu_pots(self):
         """
         This method calculates the probability distribution for
 
@@ -185,9 +193,12 @@ class BnetSample:
                     ampu_pot = nd.potential
                 else:
                     ampu_pot = ampu_pot * nd.potential
-        full_pot = ampu_pot * nd_x.potential
-        return ampu_pot, full_pot
+        self.ampu_pot = ampu_pot
+        self.full_pot = ampu_pot * nd_x.potential
 
+    def calc_full_and_ampu_probs(self):
+        self.full_prob_y_bar_x = self.calc_prob_y_bar_x(self.full_pot)
+        self.ampu_prob_y_bar_x = self.calc_prob_y_bar_x(self.ampu_pot)
 
     def calc_prob_y_bar_x(self, in_pot):
         """
@@ -196,6 +207,12 @@ class BnetSample:
         `ampu_prob_y_bar_x`, `full_prob_y_bar_x'. The probabilities are of the
         type P(y|x) and expressed as numpy arrays. `ampu_prob_y_bar_x` equals P(
         y|do(x)).
+
+                The analogous method `calc_ampu_and_full_prob_y_bar_x` calculates P(
+        y|x). This method calculates P(y| x, z) instead. If you don't want
+        the name of the extra node to be "conditioned on" to default to 'z',
+        you can tell the method the name of your alternative to "z" using
+        the input variable `other_cond`
 
         Parameters
         ----------
@@ -208,57 +225,54 @@ class BnetSample:
         np.array, np.array
 
         """
-        nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
+        if not self.other_cond:
+            nd_x = self.name_to_nd['x']
+            nd_y = self.name_to_nd['y']
 
-        arr_xy = in_pot.get_new_marginal(
-            [nd_x, nd_y]).pot_arr
-        pot_y_bar_x = DiscreteCondPot(
-            False,
-            [nd_x, nd_y],
-            arr_xy)
-        pot_y_bar_x.normalize_self()
-        return pot_y_bar_x.pot_arr
+            arr_xy = in_pot.get_new_marginal(
+                [nd_x, nd_y]).pot_arr
+            pot_y_bar_x = DiscreteCondPot(
+                False,
+                [nd_x, nd_y],
+                arr_xy)
+            pot_y_bar_x.normalize_self()
+            return pot_y_bar_x.pot_arr
+        else:
+            nd_x = self.name_to_nd['x']
+            nd_y = self.name_to_nd['y']
+            nd_z = self.name_to_nd[self.other_cond]
+            arr_xzy = in_pot.get_new_marginal(
+                [nd_x, nd_z, nd_y]).pot_arr
+            pot_y_bar_x_z = DiscreteCondPot(
+                False,
+                [nd_x, nd_z, nd_y],
+                arr_xzy)
 
-    def calc_prob_y_bar_x_z(self, in_pot, other_cond="z"):
-        """
-        The analogous method `calc_ampu_and_full_prob_y_bar_x` calculates P(
-        y|x). This method calculates P(y| x, z) instead. If you don't want
-        the name of the extra node to be "conditioned on" to default to 'z',
-        you can tell the method the name of your alternative to "z" using
-        the input variable `other_cond`
+            pot_y_bar_x_z.normalize_self()
+            return pot_y_bar_x_z.pot_arr
 
+    def print_full_and_ampu_prob_y_bar_x(self):
+        if not self.other_cond:
+            print()
+            print(f"full P(y|x) for Bnet{self.sample_num}:")
+            pprint(self.full_prob_y_bar_x)
+            print()
+            print(f"amputated P(y|x) for Bnet{self.sample_num}:"
+                  f" (REQUIRES RCT)")
+            pprint(self.ampu_prob_y_bar_x)
+        else:
+            print()
+            print(f"full P(y|x, {self.other_cond}) for "
+                  f"Bnet{self.sample_num}:")
+            pprint(self.full_prob_y_bar_x)
+            print()
+            print(f"amputated P(y|x, {self.other_cond}) for "
+                f"Bnet{self.sample_num}: (REQUIRES RCT)")
+            pprint(self.ampu_prob_y_bar_x)
 
-        Parameters
-        ----------
-        in_pot
-        other_cond
-
-        Returns
-        -------
-
-        """
-        assert isinstance(other_cond, str)
-        nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
-        nd_z = self.name_to_nd[other_cond]
-        arr_xzy = in_pot.get_new_marginal(
-            [nd_x, nd_z, nd_y]).pot_arr
-        pot_y_bar_x_z = DiscreteCondPot(
-            False,
-            [nd_x, nd_z, nd_y],
-            arr_xzy)
-
-        pot_y_bar_x_z.normalize_self()
-        return pot_y_bar_x_z.pot_arr
-
-    def print_ampu_and_full_prob_y_bar_x(self):
-        print()
-        print(f"full P(y|x) for Bnet{self.sample_num}:")
-        pprint(self.full_prob_y_bar_x)
-        print()
-        print(f"amputated P(y|x) for Bnet{self.sample_num}: (REQUIRES RCT)")
-        pprint(self.ampu_prob_y_bar_x)
 
     def print_CPTs(self):
         print(self.bnet)
+
+    def draw(self, jupyter=True):
+        DotTool.draw(self.dot_file, jupyter=jupyter)
