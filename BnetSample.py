@@ -3,7 +3,39 @@ from graphs.BayesNet import *
 from pprint import pprint
 from DotTool import *
 
+
 class BnetSample:
+    """
+    ampu_pot: Potential
+    ampu_prob_y_bar_x: np.array
+    arrows: list[tuple[str, str]]
+            example: [('a', 'b'), ('a', 'c')], where ('a', 'b') means a->b
+    bnet: BayesNet
+        BayesNet object created by `create_random_bnet`. BayesNet or bnet
+        stand for Bayesian network.
+    dot_file: str
+        dot file (i.e., graphviz format) of the OP (Original Promise) bnet.
+
+    full_pot: Potential
+    full_prob_y_bar_x: np.array
+    hidden_nd_names: list[str]
+        names of hidden nodes
+    name_to_nd: dict[str, BayesNode]
+    nd_names: list[str]
+        example: ['a', 'b', 'c']
+    nd_to_size: dict[str, int] | None
+        dict mapping each node name to its size. This input need only be a
+        partial list of those nodes that you don't want to have default
+        values. dictionary mapping node name to its size (i.e., the number
+        of values or states). In this method, `nd_to_size` must contain all
+        the nodes. In all other methods in this file (for example,
+        in `fill_node_to_size( )`), `nd_to_size` contains only special nodes
+        which you don't want to have a default size. Default sizes are 2 for
+        non-hidden nodes and 3 for hidden ones.
+    other_cond: str | None
+    sample_num: int
+
+    """
 
     def __init__(self,
                  dot_file,
@@ -11,19 +43,28 @@ class BnetSample:
                  nd_to_size=None,
                  sample_num=1,
                  other_cond=None):
+        """
+
+        Parameters
+        ----------
+        dot_file: str
+        hidden_nd_names: list[str]
+        nd_to_size: dict[str, int] | None
+        sample_num: int
+        other_cond: str | None
+        """
         self.dot_file = dot_file
         self.hidden_nd_names = hidden_nd_names
-        self.sample_num= sample_num
+        self.sample_num = sample_num
         self.nd_names, self.arrows = DotTool.read_dot_file(dot_file)
         self.nd_to_size = self.fill_nd_to_size(nd_to_size)
         if other_cond:
             assert isinstance(other_cond, str)
         self.other_cond = other_cond
 
-
         self.bnet = self.create_random_bnet()
         self.name_to_nd = {name: self.bnet.get_node_named(name)
-                for name in self.nd_names}
+                           for name in self.nd_names}
 
         self.ampu_pot = None
         self.full_pot = None
@@ -43,17 +84,11 @@ class BnetSample:
 
         Parameters
         ----------
-        dot_file: str
-            dot file (i.e., graphviz format) of the OP (Original Promise) bnet.
-        hidden_nd_names: list[str]
-            names of hidden nodes
         nd_to_size: dict[str, int] | None
-            dict mapping each node name to its size. This input need only be a
-            partial list of those nodes that you don't want to have default values.
 
         Returns
         -------
-        list[str]
+        dict[str, int]
 
         """
         nd_to_size1 = {}
@@ -70,26 +105,13 @@ class BnetSample:
         return nd_to_size1
 
     def create_random_bnet(self):
+
         """
         This method returns a BayesNet object whose structure is given by
         'nodes' and 'arrows'. The TPM (transition probability matrix, a.k.a.
         CPT, conditional probability table) for each node is created at random,
         with the only other constraint being that the number of states of each
         node be as specified by the input 'nd_to_size'.
-
-        Parameters
-        ----------
-        nodes: list[str]
-            example: ['a', 'b', 'c']
-        arrows: list[tuple[str, str]]
-            example: [('a', 'b'), ('a', 'c')], where ('a', 'b') means a->b
-        nd_to_size: dict[str, int]
-            dictionary mapping node name to its size (i.e., the number of values
-            or states). In this method, `nd_to_size` must contain all the nodes.
-            In all other methods in this file (for example,
-            in `fill_node_to_size( )`), `nd_to_size` contains only special nodes
-            which you don't want to have a default size. Default sizes are 2 for
-            non-hidden nodes and 3 for hidden ones.
 
         Returns
         -------
@@ -127,7 +149,6 @@ class BnetSample:
         # print("aadf", bnet)
         return bnet
 
-
     def randomize_these_nodes(self,
                               some_node_names):
         """
@@ -137,9 +158,6 @@ class BnetSample:
 
         Parameters
         ----------
-        bnet: BayesNet
-            BayesNet object created by `create_random_bnet`. BayesNet or bnet
-            stand for Bayesian network.
         some_node_names: list[str]
             This is a partial list of node names. Normally one uses for this a
             list of nodes that are hidden.
@@ -149,14 +167,13 @@ class BnetSample:
         None
 
         """
-        self.sample_num  += 1
+        self.sample_num += 1
         for name in some_node_names:
             nd = self.bnet.get_node_named(name)
             nd.potential.set_to_random()
             nd.potential.normalize_self()
         self.calc_full_and_ampu_pots()
         self.calc_full_and_ampu_probs()
-
 
     def calc_full_and_ampu_pots(self):
         """
@@ -174,13 +191,9 @@ class BnetSample:
         joint probability distribution like P(x,y,z) or a conditional one like
         P(z| x, y).
 
-        Parameters
-        ----------
-        bnet: BayesNet
-
         Returns
         -------
-        Potential, Potential
+        None
 
         """
 
@@ -197,10 +210,17 @@ class BnetSample:
         self.full_pot = ampu_pot * nd_x.potential
 
     def calc_full_and_ampu_probs(self):
-        self.full_prob_y_bar_x = self.calc_prob_y_bar_x(self.full_pot)
-        self.ampu_prob_y_bar_x = self.calc_prob_y_bar_x(self.ampu_pot)
+        """
 
-    def calc_prob_y_bar_x(self, in_pot):
+        Returns
+        -------
+        None
+
+        """
+        self.full_prob_y_bar_x = self.get_prob_y_bar_x(self.full_pot)
+        self.ampu_prob_y_bar_x = self.get_prob_y_bar_x(self.ampu_pot)
+
+    def get_prob_y_bar_x(self, in_pot):
         """
         This method takes the two Potentials `ampu_pot` and `full_pot` and
         calculates from these the two conditional probabilities
@@ -216,13 +236,11 @@ class BnetSample:
 
         Parameters
         ----------
-        bnet: BayesNet
-        ampu_pot: Potential
-        full_pot: Potential
+        in_pot: Potential
 
         Returns
         -------
-        np.array, np.array
+        np.array
 
         """
         if not self.other_cond:
@@ -252,6 +270,13 @@ class BnetSample:
             return pot_y_bar_x_z.pot_arr
 
     def print_full_and_ampu_prob_y_bar_x(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
         if not self.other_cond:
             print()
             print(f"full P(y|x) for Bnet{self.sample_num}:")
@@ -267,12 +292,29 @@ class BnetSample:
             pprint(self.full_prob_y_bar_x)
             print()
             print(f"amputated P(y|x, {self.other_cond}) for "
-                f"Bnet{self.sample_num}: (REQUIRES RCT)")
+                  f"Bnet{self.sample_num}: (REQUIRES RCT)")
             pprint(self.ampu_prob_y_bar_x)
 
-
     def print_CPTs(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
         print(self.bnet)
 
     def draw(self, jupyter=True):
+        """
+
+        Parameters
+        ----------
+        jupyter: bool
+
+        Returns
+        -------
+        None
+
+        """
         DotTool.draw(self.dot_file, jupyter=jupyter)

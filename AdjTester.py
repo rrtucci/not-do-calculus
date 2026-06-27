@@ -3,11 +3,27 @@ from BnetSample import *
 
 
 class AdjTester:
+    """
+    adj_ampu_prob_y_bar_x: np.array
+    adj_case: AdjCases
+    adj_full_prob_y_bar_x: np.array
+    adj_pot_method: Function
+    bnet_sample: BnetSample
+
+    """
 
     def __init__(self,
                  bnet_sample,
                  adj_pot_method=None,
                  adj_version=1):
+        """
+
+        Parameters
+        ----------
+        bnet_sample: BnetSample
+        adj_pot_method: Function
+        adj_version: int
+        """
         self.bnet_sample = bnet_sample
         self.adj_pot_method = adj_pot_method
         if not adj_pot_method:
@@ -19,14 +35,32 @@ class AdjTester:
         self.adj_full_prob_y_bar_x = None
 
     def calc_adj_prob_y_bar_x(self, adj_pot_method=None):
+        """
+
+        Parameters
+        ----------
+        adj_pot_method: Function | None
+
+        Returns
+        -------
+        None
+
+        """
         if not adj_pot_method:
             adj_pot_method = self.adj_case.adj_pot_method
-        self.adj_ampu_prob_y_bar_x= self.bnet_sample.calc_prob_y_bar_x(
+        self.adj_ampu_prob_y_bar_x= self.bnet_sample.get_prob_y_bar_x(
             adj_pot_method(self.bnet_sample.ampu_pot))
-        self.adj_full_prob_y_bar_x= self.bnet_sample.calc_prob_y_bar_x(
+        self.adj_full_prob_y_bar_x= self.bnet_sample.get_prob_y_bar_x(
             adj_pot_method(self.bnet_sample.full_pot))
 
     def print_adj_full_and_ampu_prob_y_bar_x(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
         if not self.bnet_sample.other_cond:
             print(f"adjusted P(y|x) from full_pot for "
                   f"Bnet{self.bnet_sample.sample_num}:")

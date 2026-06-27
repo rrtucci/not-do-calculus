@@ -20,19 +20,43 @@ The AFs considered are
 """
 
 class AdjCases:
+    """
+    adj_pot_method: Function
+    adj_version: int
+    dot_file: str
+    has_other_cond: bool
+    name_to_nd: dict[str, BayesNode]
+
+
+    """
     def __init__(self, 
                  name_to_nd,
                  dot_file,
                  adj_version):
+        """
+
+        Parameters
+        ----------
+        name_to_nd: dict[str, BayesNode]
+        dot_file: str
+        adj_version: int
+        """
         self.name_to_nd = name_to_nd
         self.dot_file = dot_file
         self.adj_version = adj_version
         self.adj_pot_method = None
-        self.has_other_cond = None
+        self.has_other_cond = False
         self.set_adj_pot_method()
 
 
     def set_adj_pot_method(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
         dotf_strings = ["back-door", "front-door", "napkin"]
         adj_id_to_adj_method = {
             "back-door1": self.get_backdoor_adj_pot,
@@ -63,13 +87,11 @@ class AdjCases:
     
         Parameters
         ----------
-        bnet: BayesNet
         in_pot: Potential
     
         Returns
         -------
-        np.array
-    
+        Potential
         """
         nd_z = self.name_to_nd['z']
         nd_x = self.name_to_nd['x']
@@ -82,16 +104,14 @@ class AdjCases:
     
     def get_frontdoor_adj_pot(self, in_pot):
         """
-    
+
         Parameters
         ----------
-        bnet: BayesNet
         in_pot: Potential
-    
+
         Returns
         -------
-        np.array
-    
+        Potential
         """
         # nd_h = self.name_to_nd['h']
         nd_m = self.name_to_nd['m']
@@ -108,16 +128,14 @@ class AdjCases:
     
     def get_napkin1_adj_pot(self, in_pot):
         """
-    
+
         Parameters
         ----------
-        bnet: BayesNet
         in_pot: Potential
-    
+
         Returns
         -------
-        np.array
-    
+        Potential
         """
         nd_w = self.name_to_nd['w']
         nd_z = self.name_to_nd['z']
@@ -135,16 +153,14 @@ class AdjCases:
     
     def get_napkin2_adj_pot(self, in_pot):
         """
-    
+
         Parameters
         ----------
-        bnet: BayesNet
         in_pot: Potential
-    
+
         Returns
         -------
-        np.array
-    
+        Potential
         """
         nd_z = self.name_to_nd['z']
         nd_x = self.name_to_nd['x']
@@ -160,16 +176,14 @@ class AdjCases:
     
     def get_napkin3_adj_pot(self, in_pot):
         """
-    
+
         Parameters
         ----------
-        bnet: BayesNet
         in_pot: Potential
-    
+
         Returns
         -------
-        np.array
-    
+        Potential
         """
         nd_w = self.name_to_nd['w']
         nd_x = self.name_to_nd['x']
@@ -185,16 +199,14 @@ class AdjCases:
     
     def get_napkin4_adj_pot(self, in_pot):
         """
-    
+
         Parameters
         ----------
-        bnet: BayesNet
         in_pot: Potential
-    
+
         Returns
         -------
-        np.array
-    
+        Potential
         """
         nd_w = self.name_to_nd['w']
         nd_z = self.name_to_nd['z']
