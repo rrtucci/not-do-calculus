@@ -1,60 +1,41 @@
-from potentials.DiscreteCondPot import *
+from itertools import combinations
+from more_itertools import set_partitions
+from AdjCandidate import *
+from AdjTester import *
+from itertools import chain
+def flatten(partition):
+    return list(chain.from_iterable(partition))
 
-class GenericAdjustmentFormula:
+class AdjSearcher:
 
-    def __init__(self,
-                 bnet,
-                 hidden_nd_names,
-                 adj_names,
-                 partition_id_to_adj_names):
-        self.bnet = bnet
-        self.hidden_nd_names = hidden_nd_names
-        self.adj_names = adj_names
-        self.partition_id_to_adj_names = partition_id_to_adj_names
+    def __init__(self, bnet_sample):
+        self.bnet_sample = bnet_sample
+        self.num_hidden_nds = len(self.bnet_sample.hidden_nd_names)
+        self.candy_partitions  = self.get_candidate_partitions()
 
-        self.adj_nds = [bnet.get_nd_named(name) for name in adj_names]
-        self.partition_id_to_adj_nds = {}
-        for pid, names in partition_id_to_adj_names:
-            self.partition_id_to_adj_nds[pid] = \
-                [bnet.get_nd_named(name) for name in names]
+    def get_candidate_partitions(self):
+        possible_trols = [name for name in self.bnet_sample.nd_names
+                          if name != "y"]
 
-    def get_adj_formula_str(self):
-        str1 = r"\frac{1}{\sum_y num}\sum_{"
-        for name in self.adj_names:
-            str1 += name + ", "
-        str1 = str1[-2] + r"}P(x, y|"
-        for name in self.adj_names:
-            str1 += name + ", "
-        str1 = str1[-2] + r")"
-        for pid, names in self.partition_id_to_adj_names:
-            str1 += r"P("
-            for name in names:
-                str1 += name + ", "
-            str1 = str1[-2] + r")"
+        candy_partitions = []
+        for sublist in combinations(possible_trols,
+                                   self.num_hidden_nds):
+            for partition in set_partitions(sublist):
+                candy_partitions += partition
+        return candy_partitions
 
-        return str1
-
-    def get_adj_probs(self, full_pot):
-        nd_x = self.bnet.get_nd_named("x")
-        nd_y = self.bnet.get_nd_named("y")
-        xy_adj_nds = [nd_x, nd_y] + self.adj_nds
-        pot_xy_adj = full_pot.get_new_marginal(xy_adj_nds)
-        pot_adj = full_pot.get_new_marginal(self.adj_nds)
-        pid_to_pot = {}
-        for pid, adj_nds in self.partition_id_to_adj_nds.items():
-            pid_to_pot[pid] = full_pot.get_new_marginal(adj_nds)
-
-        final_pot = pot_xy_adj/pot_adj
-        for pid, pot in pid_to_pot.items():
-            final_pot = final_pot*pot
-
-        arr_y_bar_x = final_pot.get_new_marginal([nd_x, nd_y]).pot_arr
-        pot_y_bar_x = DiscreteCondPot(False,
-                                      [nd_x, nd_y],
-                                      arr_y_bar_x)
-        pot_y_bar_x.normalize_self()
-        prob_y_bar_x = pot_y_bar_x.pot_arr
-        return prob_y_bar_x
-
-
-
+    def conduct_search(self):
+        for candy_partition in self.candy_partitions:
+            cid_to_clique = {}
+            for cid in range(len(candy_partition)):
+                cid_to_clique[cid] = candy_partition[cid]
+            candy = AdjCandidate(self.bnet_sample,
+                                 cid_to_clique)
+            tester = AdjTester(self.bnet_sample, candy.get_adj_pot)
+            test_result = tester.conduct_test()
+            print("--------------------")
+            print(candy.get_adj_str())
+            if test_result:
+                print("VALID adjustment formula")
+            else:
+                print("failed")

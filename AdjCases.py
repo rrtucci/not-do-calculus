@@ -1,6 +1,3 @@
-from potentials.DiscreteCondPot import *
-from graphs.BayesNet import *
-
 """
 All the methods in this file return a conditional probability P(y|x) or P(
 y|x, z) dictated by an adjustment formula (AF).
@@ -19,6 +16,7 @@ The AFs considered are
 
 """
 
+
 class AdjCases:
     """
     adj_pot_method: Function
@@ -29,7 +27,8 @@ class AdjCases:
 
 
     """
-    def __init__(self, 
+
+    def __init__(self,
                  name_to_nd,
                  dot_file,
                  adj_version):
@@ -48,7 +47,6 @@ class AdjCases:
         self.has_other_cond = False
         self.set_adj_pot_method()
 
-
     def set_adj_pot_method(self):
         """
 
@@ -66,7 +64,7 @@ class AdjCases:
             "napkin3": self.get_napkin3_adj_pot,
             "napkin4": self.get_napkin4_adj_pot
         }
-    
+
         adj_method = None
         has_other_cond = False
         for dotf_str in dotf_strings:
@@ -80,8 +78,7 @@ class AdjCases:
             assert None, "No adjustment method found"
         self.adj_pot_method = adj_method
         self.has_other_cond = has_other_cond
-    
-    
+
     def get_backdoor_adj_pot(self, in_pot):
         """
     
@@ -95,13 +92,12 @@ class AdjCases:
         """
         nd_z = self.name_to_nd['z']
         nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
+
         pot_xz = in_pot.get_new_marginal([nd_x, nd_z])
         pot_z = in_pot.get_new_marginal([nd_z])
         final_pot = (in_pot / pot_xz) * pot_z
         return final_pot
-    
-    
+
     def get_frontdoor_adj_pot(self, in_pot):
         """
 
@@ -120,12 +116,11 @@ class AdjCases:
         pot_mxy = in_pot.get_new_marginal([nd_m, nd_x, nd_y])
         pot_mx = in_pot.get_new_marginal([nd_m, nd_x])
         pot_x = pot_mx.get_new_marginal([nd_x])
-    
+
         pot_my = (pot_mxy * pot_x / pot_mx).get_new_marginal([nd_m, nd_y])
         final_pot = pot_my * pot_mx / pot_x
         return final_pot
-    
-    
+
     def get_napkin1_adj_pot(self, in_pot):
         """
 
@@ -141,16 +136,15 @@ class AdjCases:
         nd_z = self.name_to_nd['z']
         nd_x = self.name_to_nd['x']
         nd_y = self.name_to_nd['y']
-    
+
         pot_wzxy = in_pot.get_new_marginal([nd_w, nd_z, nd_x, nd_y])
         pot_wz = pot_wzxy.get_new_marginal([nd_w, nd_z])
         pot_w = pot_wz.get_new_marginal([nd_w])
         pot_z = pot_wz.get_new_marginal([nd_z])
-    
+
         final_pot = pot_wzxy * pot_w * pot_z / pot_wz
         return final_pot
-    
-    
+
     def get_napkin2_adj_pot(self, in_pot):
         """
 
@@ -165,15 +159,14 @@ class AdjCases:
         nd_z = self.name_to_nd['z']
         nd_x = self.name_to_nd['x']
         nd_y = self.name_to_nd['y']
-    
+
         pot_zxy = in_pot.get_new_marginal([nd_z, nd_x, nd_y])
         pot_zx = pot_zxy.get_new_marginal([nd_z, nd_x])
         pot_z = pot_zx.get_new_marginal([nd_z])
-    
+
         final_pot = (pot_zxy / pot_zx) * pot_z
         return final_pot
-    
-    
+
     def get_napkin3_adj_pot(self, in_pot):
         """
 
@@ -188,15 +181,14 @@ class AdjCases:
         nd_w = self.name_to_nd['w']
         nd_x = self.name_to_nd['x']
         nd_y = self.name_to_nd['y']
-    
+
         pot_wxy = in_pot.get_new_marginal([nd_w, nd_x, nd_y])
         pot_wx = pot_wxy.get_new_marginal([nd_w, nd_x])
         pot_w = pot_wx.get_new_marginal([nd_w])
-    
+
         final_pot = (pot_wxy / pot_wx) * pot_w
         return final_pot
-    
-    
+
     def get_napkin4_adj_pot(self, in_pot):
         """
 
@@ -212,12 +204,11 @@ class AdjCases:
         nd_z = self.name_to_nd['z']
         nd_x = self.name_to_nd['x']
         nd_y = self.name_to_nd['y']
-    
+
         pot_wzxy = in_pot.get_new_marginal([nd_w, nd_z, nd_x, nd_y])
         pot_wz = pot_wzxy.get_new_marginal([nd_w, nd_z])
         pot_w = pot_wz.get_new_marginal([nd_w])
         # print("nnmf", pot_w.pot_arr)
-    
+
         final_pot = (pot_wzxy / pot_wz) * pot_w
         return final_pot
-    
