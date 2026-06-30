@@ -2,25 +2,35 @@ from BnetSample import *
 
 
 class AdjCandidate:
+    """
+    Attributes
+    ----------
+    bnet_sample: BnetSample
+    cid_to_clique: dict[int, list[int]]
+    cid_to_clique_nds: dict[int, list[BayesNode]]
+    controls: list[str]
+    control_nds: list[BayesNode]
+    """
 
     def __init__(self,
                  bnet_sample,
-                 cid_to_clique):
+                 cid_to_clique=None):
         """
         cid_to_clique = clique id to clique
 
         Parameters
         ----------
         bnet_sample: BnetSample
-        controls: list[str]
-        cid_to_clique: dict[int, list[int]]
+        cid_to_clique: dict[int, list[int]] | None
         """
         self.bnet_sample = bnet_sample
+        if not cid_to_clique:
+            cid_to_clique = {1:[]}
         self.cid_to_clique = cid_to_clique
 
         self.cid_to_clique_nds = {}
         controls = []
-        for cid, clique in cid_to_clique:
+        for cid, clique in cid_to_clique.items():
             controls += clique
             self.cid_to_clique_nds[cid] = \
                 [bnet_sample.name_to_nd[name] for name in clique]
@@ -36,18 +46,20 @@ class AdjCandidate:
         str
 
         """
-        str1 = r"\frac{1}{\sum_y num}\sum_{"
+        if not self.control_nds:
+            return r"$P(y|do(x))= P(y|x)$"
+        str1 = r"$P(y|do(x))= \frac{1}{\sum_y num}\sum_{"
         for name in self.controls:
             str1 += name + ", "
-        str1 = str1[-2] + r"}P(x, y|"
+        str1 = str1[:-2] + r"}P(x, y|"
         for name in self.controls:
             str1 += name + ", "
-        str1 = str1[-2] + r")"
-        for cid, clique in self.cid_to_clique:
+        str1 = str1[:-2] + r")"
+        for cid, clique in self.cid_to_clique.items():
             str1 += r"P("
             for name in clique:
                 str1 += name + ", "
-            str1 = str1[-2] + r")"
+            str1 = str1[:-2] + r")$"
 
         return str1
 
@@ -65,14 +77,16 @@ class AdjCandidate:
         """
         nd_x = self.bnet_sample.name_to_nd["x"]
         nd_y = self.bnet_sample.name_to_nd["y"]
+        if not self.control_nds:
+            return in_pot.get_new_marginal([nd_x, nd_y])
         xy_control_nds = [nd_x, nd_y] + self.control_nds
-        pot_xy = in_pot.get_new_marginal(xy_control_nds)
-        pot_controls = in_pot.get_new_marginal(self.control_nds)
+        pot_xy_trols = in_pot.get_new_marginal(xy_control_nds)
+        pot_trols = in_pot.get_new_marginal(self.control_nds)
         cid_to_pot = {}
         for cid, clique_nds in self.cid_to_clique_nds.items():
             cid_to_pot[cid] = in_pot.get_new_marginal(clique_nds)
 
-        final_pot = pot_xy / pot_controls
+        final_pot = pot_xy_trols / pot_trols
         for cid, pot in cid_to_pot.items():
             final_pot = final_pot * pot
 

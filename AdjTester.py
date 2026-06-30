@@ -3,18 +3,23 @@ from BnetSample import *
 
 class AdjTester:
     """
+    Attributes
+    ----------
+
     adj_ampu_prob_y_bar_x: np.array
     adj_case: AdjCases
     adj_full_prob_y_bar_x: np.array
     adj_pot_method: Function
     bnet_sample: BnetSample
+    empty_adj: bool
 
     """
 
     def __init__(self,
                  bnet_sample,
                  adj_pot_method=None,
-                 adj_version=1):
+                 adj_version=1,
+                 null_adj = False):
         """
 
         Parameters
@@ -22,6 +27,9 @@ class AdjTester:
         bnet_sample: BnetSample
         adj_pot_method: Function
         adj_version: int
+            the adjustment formula version. For the Napkin OP, there are
+            currently 4 adjustment formulae that are tested
+        null_adj: bool
         """
         self.bnet_sample = bnet_sample
         self.adj_pot_method = adj_pot_method
@@ -29,7 +37,7 @@ class AdjTester:
             self.adj_case = AdjCases(bnet_sample.name_to_nd,
                                      bnet_sample.dot_file,
                                      adj_version)
-
+        self.empty_adj = null_adj
         self.adj_ampu_prob_y_bar_x = None
         self.adj_full_prob_y_bar_x = None
 
@@ -63,7 +71,7 @@ class AdjTester:
         if not self.bnet_sample.other_cond:
             print(f"adjusted P(y|x) from full_pot for "
                   f"Bnet{self.bnet_sample.sample_num}:")
-            pprint(self.adj_ampu_prob_y_bar_x)
+            pprint(self.adj_full_prob_y_bar_x)
             print()
             print(f"adjusted P(y|x) from ampu_pot for "
                   f"Bnet{self.bnet_sample.sample_num} (REQUIRES RCT)")
@@ -79,11 +87,10 @@ class AdjTester:
                   f"Bnet{self.bnet_sample.sample_num} (REQUIRES RCT)")
             pprint(self.adj_full_prob_y_bar_x)
 
-    def print_test_results(self,
-                           adj_version=1,
-                           re_randomize_hidden_nds=True,
-                           verbose=True):
-        """
+    def print_adj_report(self,
+                         re_randomize_hidden_nds=True,
+                         verbose=False):
+        """.
                This method and the analogous one `print_all_prob_y_bar_x_z` are the
         only ones used in the jupyter notebooks. All others are meant to be
         internal. This method prints 4 things for each bnet.
@@ -104,9 +111,6 @@ class AdjTester:
 
         Parameters
         ----------
-        adj_version: int
-            the adjustment formula version. For the Napkin OP, there are
-            currently 4 adjustment formulae that are tested.
         re_randomize_hidden_nds: bool
         verbose: bool
             if this is set to True, the method prints also the CPT of each node
@@ -135,9 +139,30 @@ class AdjTester:
             self.calc_adj_prob_y_bar_x(self.adj_pot_method)
             self.print_adj_full_and_ampu_prob_y_bar_x()
 
-    def conduct_test(self):
-        return np.allclose(self.adj_full_prob_y_bar_x,
-                           self.bnet_sample.full_prob_y_bar_x)
+    def conduct_closeness_test(self, verbose):
+        """
+        verbose: bool
+
+        Returns
+        -------
+        bool
+
+        """
+        if self.empty_adj:
+            self.adj_ampu_prob_y_bar_x = \
+                self.bnet_sample.ampu_prob_y_bar_x
+            self.adj_full_prob_y_bar_x = \
+                self.bnet_sample.full_prob_y_bar_x
+        else:
+            self.calc_adj_prob_y_bar_x(self.adj_pot_method)
+        passed_test = np.allclose(self.adj_full_prob_y_bar_x,
+                           self.bnet_sample.ampu_prob_y_bar_x)
+        if verbose:
+            self.bnet_sample.print_full_and_ampu_prob_y_bar_x()
+            print()
+            self.print_adj_full_and_ampu_prob_y_bar_x()
+        return passed_test
+
 
 if __name__ == "__main__":
     def main_backdoor(draw, verbose):
@@ -153,12 +178,11 @@ if __name__ == "__main__":
 
         """
         bnet_sample = BnetSample(dot_file="dot_atlas/back-door.dot",
-                                 hidden_nd_names=[]
-                                 )
+                                 hidden_nd_names=[])
         if draw:
             bnet_sample.draw(jupyter=False)
         tester = AdjTester(bnet_sample)
-        tester.print_test_results(verbose=verbose)
+        tester.print_adj_report(verbose=verbose)
 
 
     def main_frontdoor(draw, verbose):
@@ -178,7 +202,7 @@ if __name__ == "__main__":
         if draw:
             bnet_sample.draw(jupyter=False)
         tester = AdjTester(bnet_sample)
-        tester.print_test_results(verbose=verbose)
+        tester.print_adj_report(verbose=verbose)
 
 
     def main_napkin1(draw, verbose):
@@ -198,7 +222,7 @@ if __name__ == "__main__":
         if draw:
             bnet_sample.draw(jupyter=False)
         tester = AdjTester(bnet_sample, adj_version=1)
-        tester.print_test_results(verbose=verbose)
+        tester.print_adj_report(verbose=verbose)
 
 
     def main_napkin2(draw, verbose):
@@ -219,7 +243,7 @@ if __name__ == "__main__":
         if draw:
             bnet_sample.draw(jupyter=False)
         tester = AdjTester(bnet_sample, adj_version=2)
-        tester.print_test_results(verbose=verbose)
+        tester.print_adj_report(verbose=verbose)
 
 
     def main_napkin3(draw, verbose):
@@ -239,7 +263,7 @@ if __name__ == "__main__":
         if draw:
             bnet_sample.draw(jupyter=False)
         tester = AdjTester(bnet_sample, adj_version=3)
-        tester.print_test_results(verbose=verbose)
+        tester.print_adj_report(verbose=verbose)
 
 
     def main_napkin4(draw, verbose):
@@ -261,12 +285,12 @@ if __name__ == "__main__":
         if draw:
             bnet_sample.draw(jupyter=False)
         tester = AdjTester(bnet_sample, adj_version=4)
-        tester.print_test_results(verbose=verbose)
+        tester.print_adj_report(verbose=verbose)
 
 
     # main_backdoor(False, False)
     # main_frontdoor(False, False)
     # main_napkin1(False, False)
-    # main_napkin2(False, False)
-    main_napkin3(False, False)
+    main_napkin2(False, False)
+    #  main_napkin3(False, False)
     # main_napkin4(False, False)

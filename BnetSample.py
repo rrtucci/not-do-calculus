@@ -6,6 +6,8 @@ from DotTool import *
 
 class BnetSample:
     """
+    Attributes
+    ----------
     ampu_pot: Potential
     ampu_prob_y_bar_x: np.array
     arrows: list[tuple[str, str]]

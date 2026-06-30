@@ -19,6 +19,8 @@ The AFs considered are
 
 class AdjCases:
     """
+    Attributes
+    ----------
     adj_pot_method: Function
     adj_version: int
     dot_file: str
@@ -117,8 +119,8 @@ class AdjCases:
         pot_mx = in_pot.get_new_marginal([nd_m, nd_x])
         pot_x = pot_mx.get_new_marginal([nd_x])
 
-        pot_my = (pot_mxy * pot_x / pot_mx).get_new_marginal([nd_m, nd_y])
-        final_pot = pot_my * pot_mx / pot_x
+        pot_ym = (pot_mxy * pot_x / pot_mx).get_new_marginal([nd_y, nd_m])
+        final_pot = pot_ym * pot_mx / pot_x
         return final_pot
 
     def get_napkin1_adj_pot(self, in_pot):
@@ -166,6 +168,26 @@ class AdjCases:
 
         final_pot = (pot_zxy / pot_zx) * pot_z
         return final_pot
+
+    def get_napkin2_5_adj_pot(self, in_pot):
+        """
+
+        Parameters
+        ----------
+        in_pot: Potential
+
+        Returns
+        -------
+        Potential
+        """
+        nd_z = self.name_to_nd['z']
+        nd_x = self.name_to_nd['x']
+        nd_y = self.name_to_nd['y']
+
+        pot_zxy = in_pot.get_new_marginal([nd_z, nd_x, nd_y])
+
+        return pot_zxy
+
 
     def get_napkin3_adj_pot(self, in_pot):
         """
