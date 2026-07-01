@@ -250,4 +250,47 @@ This claim is {\color{red}INCORRECT}. See
 generated  numerical counterexample.
 \qed
 
+
+\section{Napkin5}
+\begin{claim}
+If $OP=\bcen
+\xymatrix@R=1pc@C=1pc{
+&*++[F-o]{\rvu_1}\ar[ddl]\ar[ddrr]
+\\
+&*++[F-o]{\rvu_2}\ar[dl]\ar[dr]
+\\
+\rvw\ar[r]
+&\rvz\ar[r]
+&\rvx\ar[r]
+&\rvy
+}\ecen$ then
+
+\beqa
+P(y\mid \cald \rvx=x)
+&=&
+\frac{\sum_{w_1, w_2} P(y|x, w_1)P(x|w_2)P(w_1)P(w_2)}
+{\sum_y
+\text{ num}}
+\\
+&=&
+\frac{1}{\sum_y \text{ num}}
+\bcen
+\xymatrix@R=1pc@C=1pc{
+&\EE w_1\ar[ddrr]
+\\
+&\EE w_2\ar[dr]
+\\
+&
+&\rvx\ar[r]
+&\rvy
+}\ecen
+\eeqa
+\end{claim}
+\proof
+
+This claim is {\color{red}INCORRECT}. See
+\url{https://github.com/rrtucci/not-do-calculus} for computer
+generated  numerical counterexample.
+\qed
+
 \end{document}
