@@ -64,7 +64,8 @@ class AdjCases:
             "napkin1": self.get_napkin1_adj_pot,
             "napkin2": self.get_napkin2_adj_pot,
             "napkin3": self.get_napkin3_adj_pot,
-            "napkin4": self.get_napkin4_adj_pot
+            "napkin4": self.get_napkin4_adj_pot,
+            "napkin5": self.get_napkin5_adj_pot
         }
 
         adj_method = None
@@ -169,26 +170,6 @@ class AdjCases:
         final_pot = (pot_zxy / pot_zx) * pot_z
         return final_pot
 
-    def get_napkin2_5_adj_pot(self, in_pot):
-        """
-
-        Parameters
-        ----------
-        in_pot: Potential
-
-        Returns
-        -------
-        Potential
-        """
-        nd_z = self.name_to_nd['z']
-        nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
-
-        pot_zxy = in_pot.get_new_marginal([nd_z, nd_x, nd_y])
-
-        return pot_zxy
-
-
     def get_napkin3_adj_pot(self, in_pot):
         """
 
@@ -234,3 +215,26 @@ class AdjCases:
 
         final_pot = (pot_wzxy / pot_wz) * pot_w
         return final_pot
+
+    def get_napkin5_adj_pot(self, in_pot):
+        """
+
+        Parameters
+        ----------
+        in_pot: Potential
+
+        Returns
+        -------
+        Potential
+        """
+        nd_w = self.name_to_nd['w']
+        nd_x = self.name_to_nd['x']
+        nd_y = self.name_to_nd['y']
+
+        pot_wxy = in_pot.get_new_marginal([nd_w, nd_x, nd_y])
+        pot_wx = pot_wxy.get_new_marginal([nd_w, nd_x])
+        pot_w = pot_wx.get_new_marginal([nd_w])
+        pot_yx = ((pot_wxy/pot_wx)*pot_w).get_new_marginal([nd_y, nd_x])
+        final_pot = pot_yx*pot_wx
+        return final_pot
+

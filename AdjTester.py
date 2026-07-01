@@ -205,7 +205,7 @@ if __name__ == "__main__":
         tester.print_adj_report(verbose=verbose)
 
 
-    def main_napkin1(draw, verbose):
+    def main_napkin(adj_version, draw, verbose):
         """
         Parameters
         ----------
@@ -217,80 +217,20 @@ if __name__ == "__main__":
         None
 ,
         """
-        bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
-                                 hidden_nd_names=["u_1", "u_2"])
+        if adj_version == 4:
+            bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
+                                     hidden_nd_names=["u_1", "u_2"],
+                                     other_cond="z",
+                                     nd_to_size={"z": 3})
+        else:
+            bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
+                                     hidden_nd_names=["u_1", "u_2"])
         if draw:
             bnet_sample.draw(jupyter=False)
-        tester = AdjTester(bnet_sample, adj_version=1)
-        tester.print_adj_report(verbose=verbose)
-
-
-    def main_napkin2(draw, verbose):
-        """     
-        Parameters
-        ----------
-        draw: bool
-        verbose: bool
-
-        Returns
-        -------
-        None
-
-        """
-        bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
-                                 hidden_nd_names=["u_1", "u_2"])
-
-        if draw:
-            bnet_sample.draw(jupyter=False)
-        tester = AdjTester(bnet_sample, adj_version=2)
-        tester.print_adj_report(verbose=verbose)
-
-
-    def main_napkin3(draw, verbose):
-        """
-        Parameters
-        ----------
-        draw: bool
-        verbose: bool
-
-        Returns
-        -------
-        None
-
-        """
-        bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
-                                 hidden_nd_names=["u_1", "u_2"])
-        if draw:
-            bnet_sample.draw(jupyter=False)
-        tester = AdjTester(bnet_sample, adj_version=3)
-        tester.print_adj_report(verbose=verbose)
-
-
-    def main_napkin4(draw, verbose):
-        """
-        Parameters
-        ----------
-        draw: bool
-        verbose: bool
-
-        Returns
-        -------
-        None
-
-        """
-        bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
-                                 hidden_nd_names=["u_1", "u_2"],
-                                 other_cond="z",
-                                 nd_to_size={"z": 3})
-        if draw:
-            bnet_sample.draw(jupyter=False)
-        tester = AdjTester(bnet_sample, adj_version=4)
+        tester = AdjTester(bnet_sample, adj_version=adj_version)
         tester.print_adj_report(verbose=verbose)
 
 
     # main_backdoor(False, False)
     # main_frontdoor(False, False)
-    # main_napkin1(False, False)
-    main_napkin2(False, False)
-    #  main_napkin3(False, False)
-    # main_napkin4(False, False)
+    main_napkin(1, False, False)
