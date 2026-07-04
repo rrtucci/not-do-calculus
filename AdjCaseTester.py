@@ -1,7 +1,7 @@
 from AdjCases import *
 from BnetSample import *
 
-class AdjTester:
+class AdjCaseTester:
     """
     Attributes
     ----------
@@ -9,7 +9,6 @@ class AdjTester:
     adj_ampu_prob_y_bar_x: np.array
     adj_case: AdjCases
     adj_full_prob_y_bar_x: np.array
-    adj_pot_method: Function
     bnet_sample: BnetSample
     empty_adj: bool
 
@@ -17,7 +16,6 @@ class AdjTester:
 
     def __init__(self,
                  bnet_sample,
-                 adj_pot_method=None,
                  adj_version=1,
                  null_adj = False):
         """
@@ -25,23 +23,21 @@ class AdjTester:
         Parameters
         ----------
         bnet_sample: BnetSample
-        adj_pot_method: Function
         adj_version: int
             the adjustment formula version. For the Napkin OP, there are
             currently 4 adjustment formulae that are tested
         null_adj: bool
         """
         self.bnet_sample = bnet_sample
-        self.adj_pot_method = adj_pot_method
-        if not adj_pot_method:
-            self.adj_case = AdjCases(bnet_sample.name_to_nd,
-                                     bnet_sample.dot_file,
-                                     adj_version)
         self.empty_adj = null_adj
         self.adj_ampu_prob_y_bar_x = None
         self.adj_full_prob_y_bar_x = None
+        self.adj_case = AdjCases(bnet_sample.nn_to_nd,
+                                 bnet_sample.dot_file,
+                                 adj_version)
+        self.calc_adj_prob_y_bar_x()
 
-    def calc_adj_prob_y_bar_x(self, adj_pot_method=None):
+    def calc_adj_prob_y_bar_x(self):
         """
 
         Parameters
@@ -53,14 +49,18 @@ class AdjTester:
         None
 
         """
-        if not adj_pot_method:
-            adj_pot_method = self.adj_case.adj_pot_method
-        self.adj_ampu_prob_y_bar_x = self.bnet_sample.get_prob_y_bar_x(
-            adj_pot_method(self.bnet_sample.ampu_pot))
-        self.adj_full_prob_y_bar_x = self.bnet_sample.get_prob_y_bar_x(
-            adj_pot_method(self.bnet_sample.full_pot))
+        if self.empty_adj:
+            self.adj_ampu_prob_y_bar_x = \
+                self.bnet_sample.ampu_prob_y_bar_x
+            self.adj_full_prob_y_bar_x = \
+                self.bnet_sample.full_prob_y_bar_x
+        else:
+            self.adj_ampu_prob_y_bar_x = self.bnet_sample.get_prob_y_bar_x(
+                self.adj_case.adj_pot_method(self.bnet_sample.ampu_pot))
+            self.adj_full_prob_y_bar_x = self.bnet_sample.get_prob_y_bar_x(
+                self.adj_case.adj_pot_method(self.bnet_sample.full_pot))
 
-    def print_adj_full_and_ampu_prob_y_bar_x(self):
+    def print_adj_full_and_ampu_prob_y_bar_x(self, verbose):
         """
 
         Returns
@@ -70,28 +70,34 @@ class AdjTester:
         """
         if not self.bnet_sample.other_cond:
             print(f"adjusted P(y|x) from full_pot for "
-                  f"Bnet{self.bnet_sample.sample_num}:")
+                  f"Bnet{self.bnet_sample.sample_num} "
+                  f"(determined from PO data):")
             pprint(self.adj_full_prob_y_bar_x)
-            print()
-            print(f"adjusted P(y|x) from ampu_pot for "
-                  f"Bnet{self.bnet_sample.sample_num} (REQUIRES RCT)")
-            pprint(self.adj_ampu_prob_y_bar_x)
+            if verbose:
+                print()
+                print(f"adjusted P(y|x) from ampu_pot for "
+                      f"Bnet{self.bnet_sample.sample_num} "
+                      f"(determined from RCT data):")
+                pprint(self.adj_ampu_prob_y_bar_x)
         else:
             print(f"adjusted P(y|x, {self.bnet_sample.other_cond}) "
                   f"from full_pot for "
-                  f"Bnet{self.bnet_sample.sample_num}:")
+                  f"Bnet{self.bnet_sample.sample_num} "
+                  f"(determined from PO data):")
             pprint(self.adj_full_prob_y_bar_x)
-            print()
-            print(f"adjusted P(y|x, {self.bnet_sample.other_cond}) "
-                  f"from full_pot for "
-                  f"Bnet{self.bnet_sample.sample_num} (REQUIRES RCT)")
-            pprint(self.adj_full_prob_y_bar_x)
+            if verbose:
+                print()
+                print(f"adjusted P(y|x, {self.bnet_sample.other_cond}) "
+                      f"from ampu_pot for "
+                      f"Bnet{self.bnet_sample.sample_num} "
+                      f"(determined from RCT data):")
+                pprint(self.adj_ampu_prob_y_bar_x)
 
     def print_adj_report(self,
                          re_randomize_hidden_nds=True,
                          verbose=False):
-        """.
-               This method and the analogous one `print_all_prob_y_bar_x_z` are the
+        """
+        This method and the analogous one `print_all_prob_y_bar_x_z` are the
         only ones used in the jupyter notebooks. All others are meant to be
         internal. This method prints 4 things for each bnet.
         `num_bnet_samples=2` means the default is two bnets, but it will do only
@@ -129,17 +135,24 @@ class AdjTester:
             if k == 1:
                 print("------------------------------")
                 self.bnet_sample.randomize_these_nodes(
-                    self.bnet_sample.hidden_nd_names)
+                    self.bnet_sample.hidden_nns)
             print(f"Random Bnet{self.bnet_sample.sample_num}:")
             if verbose:
                 self.bnet_sample.print_CPTs()
             self.bnet_sample.print_full_and_ampu_prob_y_bar_x()
 
             print()
-            self.calc_adj_prob_y_bar_x(self.adj_pot_method)
-            self.print_adj_full_and_ampu_prob_y_bar_x()
+            self.calc_adj_prob_y_bar_x()
+            self.print_adj_full_and_ampu_prob_y_bar_x(verbose)
+            passed = self.conduct_closeness_test()
+            print()
+            if passed:
+                print("Last 2 matrices are close so VALID adjustment")
+            else:
+                print("Last 2 matrices are not close so INVALID adjustment")
 
-    def conduct_closeness_test(self, verbose):
+
+    def conduct_closeness_test(self):
         """
         verbose: bool
 
@@ -148,19 +161,8 @@ class AdjTester:
         bool
 
         """
-        if self.empty_adj:
-            self.adj_ampu_prob_y_bar_x = \
-                self.bnet_sample.ampu_prob_y_bar_x
-            self.adj_full_prob_y_bar_x = \
-                self.bnet_sample.full_prob_y_bar_x
-        else:
-            self.calc_adj_prob_y_bar_x(self.adj_pot_method)
         passed_test = np.allclose(self.adj_full_prob_y_bar_x,
                            self.bnet_sample.ampu_prob_y_bar_x)
-        if verbose:
-            self.bnet_sample.print_full_and_ampu_prob_y_bar_x()
-            print()
-            self.print_adj_full_and_ampu_prob_y_bar_x()
         return passed_test
 
 
@@ -178,10 +180,10 @@ if __name__ == "__main__":
 
         """
         bnet_sample = BnetSample(dot_file="dot_atlas/back-door.dot",
-                                 hidden_nd_names=[])
+                                 hidden_nns=[])
         if draw:
             bnet_sample.draw(jupyter=False)
-        tester = AdjTester(bnet_sample)
+        tester = AdjCaseTester(bnet_sample)
         tester.print_adj_report(verbose=verbose)
 
 
@@ -198,10 +200,10 @@ if __name__ == "__main__":
 
         """
         bnet_sample = BnetSample(dot_file="dot_atlas/front-door.dot",
-                                 hidden_nd_names=["h"])
+                                 hidden_nns=["h"])
         if draw:
             bnet_sample.draw(jupyter=False)
-        tester = AdjTester(bnet_sample)
+        tester = AdjCaseTester(bnet_sample)
         tester.print_adj_report(verbose=verbose)
 
 
@@ -219,18 +221,18 @@ if __name__ == "__main__":
         """
         if adj_version == 4:
             bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
-                                     hidden_nd_names=["u_1", "u_2"],
+                                     hidden_nns=["u_1", "u_2"],
                                      other_cond="z",
-                                     nd_to_size={"z": 3})
+                                     nn_to_size={"z": 3})
         else:
             bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
-                                     hidden_nd_names=["u_1", "u_2"])
+                                     hidden_nns=["u_1", "u_2"])
         if draw:
             bnet_sample.draw(jupyter=False)
-        tester = AdjTester(bnet_sample, adj_version=adj_version)
+        tester = AdjCaseTester(bnet_sample, adj_version=adj_version)
         tester.print_adj_report(verbose=verbose)
 
 
     # main_backdoor(False, False)
     # main_frontdoor(False, False)
-    main_napkin(1, False, False)
+    main_napkin(5, False, False)

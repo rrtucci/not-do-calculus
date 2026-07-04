@@ -20,18 +20,18 @@ class BnetSample:
 
     full_pot: Potential
     full_prob_y_bar_x: np.array
-    hidden_nd_names: list[str]
+    hidden_nns: list[str]
         names of hidden nodes
-    name_to_nd: dict[str, BayesNode]
-    nd_names: list[str]
+    nn_to_nd: dict[str, BayesNode]
+    nns: list[str]
         example: ['a', 'b', 'c']
-    nd_to_size: dict[str, int] | None
+    nn_to_size: dict[str, int] | None
         dict mapping each node name to its size. This input need only be a
         partial list of those nodes that you don't want to have default
         values. dictionary mapping node name to its size (i.e., the number
-        of values or states). In this method, `nd_to_size` must contain all
+        of values or states). In this method, `nn_to_size` must contain all
         the nodes. In all other methods in this file (for example,
-        in `fill_node_to_size( )`), `nd_to_size` contains only special nodes
+        in `fill_node_to_size( )`), `nn_to_size` contains only special nodes
         which you don't want to have a default size. Default sizes are 2 for
         non-hidden nodes and 3 for hidden ones.
     other_cond: str | None
@@ -41,32 +41,33 @@ class BnetSample:
 
     def __init__(self,
                  dot_file,
-                 hidden_nd_names,
-                 nd_to_size=None,
-                 sample_num=1,
-                 other_cond=None):
+                 hidden_nns,
+                 nn_to_size=None,
+                 other_cond=None,
+                 import_bnet=False):
         """
 
         Parameters
         ----------
         dot_file: str
-        hidden_nd_names: list[str]
-        nd_to_size: dict[str, int] | None
-        sample_num: int
+        hidden_nns: list[str]
+        nn_to_size: dict[str, int] | None
         other_cond: str | None
         """
         self.dot_file = dot_file
-        self.hidden_nd_names = hidden_nd_names
-        self.sample_num = sample_num
-        self.nd_names, self.arrows = DotTool.read_dot_file(dot_file)
-        self.nd_to_size = self.fill_nd_to_size(nd_to_size)
+        self.hidden_nns = hidden_nns
+        self.sample_num = 1
+        self.nns, self.arrows = DotTool.read_dot_file(dot_file)
+        self.nn_to_size = self.fill_nn_to_size(nn_to_size)
         if other_cond:
             assert isinstance(other_cond, str)
         self.other_cond = other_cond
+        self.import_bnet = import_bnet
 
-        self.bnet = self.create_random_bnet()
-        self.name_to_nd = {name: self.bnet.get_node_named(name)
-                           for name in self.nd_names}
+        if not import_bnet:
+            self.bnet = self.create_random_bnet()
+        self.nn_to_nd = {name: self.bnet.get_node_named(name)
+                         for name in self.nns}
 
         self.ampu_pot = None
         self.full_pot = None
@@ -75,36 +76,36 @@ class BnetSample:
         self.calc_full_and_ampu_pots()
         self.calc_full_and_ampu_probs()
 
-    def fill_nd_to_size(self, nd_to_size):
+    def fill_nn_to_size(self, nn_to_size):
         """
         This method compiles the list of node names from the dot file
-        `dot_file`. It then produces a default dict `nd_to_size1` that maps
+        `dot_file`. It then produces a default dict `nn_to_size1` that maps
         hidden nodes to 3 (i.e., they will have 3 states) and non-hidden ones to
-        2. Then the method overrides `nd_to_size1` with the request of
-        `nd_to_size` whenever they disagree. Finally, the method returns
-        `nd_to_size1`
+        2. Then the method overrides `nn_to_size1` with the request of
+        `nn_to_size` whenever they disagree. Finally, the method returns
+        `nn_to_size1`
 
         Parameters
         ----------
-        nd_to_size: dict[str, int] | None
+        nn_to_size: dict[str, int] | None
 
         Returns
         -------
         dict[str, int]
 
         """
-        nd_to_size1 = {}
-        for nd in self.nd_names:
-            nd_to_size1[nd] = 2
-        for nd_name in self.hidden_nd_names:
-            assert nd_name in self.nd_names, (f"hidden node '{nd_name}'"
-                                              f" not in full node list")
-            nd_to_size1[nd_name] = 3
-        if nd_to_size:
-            for nd_name in nd_to_size:
-                if nd_name in nd_to_size1:
-                    nd_to_size1[nd_name] = nd_to_size[nd_name]
-        return nd_to_size1
+        nn_to_size1 = {}
+        for nd in self.nns:
+            nn_to_size1[nd] = 2
+        for nn in self.hidden_nns:
+            assert nn in self.nns, (f"hidden node '{nn}'"
+                                    f" not in full node list")
+            nn_to_size1[nn] = 3
+        if nn_to_size:
+            for nn in nn_to_size:
+                if nn in nn_to_size1:
+                    nn_to_size1[nn] = nn_to_size[nn]
+        return nn_to_size1
 
     def create_random_bnet(self):
 
@@ -113,17 +114,16 @@ class BnetSample:
         'nodes' and 'arrows'. The TPM (transition probability matrix, a.k.a.
         CPT, conditional probability table) for each node is created at random,
         with the only other constraint being that the number of states of each
-        node be as specified by the input 'nd_to_size'.
+        node be as specified by the input 'nn_to_size'.
 
         Returns
         -------
         BayesNet
 
         """
-        bnet_nodes = []
         found_x = False
         found_y = False
-        for name in self.nd_names:
+        for name in self.nns:
             if name == "x":
                 found_x = True
             if name == "y":
@@ -131,9 +131,10 @@ class BnetSample:
         assert found_x and found_y, \
             "can't find 'x' or 'y' in list of node names"
 
-        for k, node_name in enumerate(self.nd_names):
+        bnet_nodes = []
+        for k, node_name in enumerate(self.nns):
             nd = BayesNode(k, name=node_name)
-            nd.size = self.nd_to_size[node_name]
+            nd.size = self.nn_to_size[node_name]
             bnet_nodes.append(nd)
         bnet = BayesNet(set(bnet_nodes))
         for arrow in self.arrows:
@@ -199,10 +200,10 @@ class BnetSample:
 
         """
 
-        nd_x = self.name_to_nd['x']
+        nd_x = self.nn_to_nd['x']
 
         ampu_pot = None
-        for name, nd in self.name_to_nd.items():
+        for name, nd in self.nn_to_nd.items():
             if nd != nd_x:
                 if not ampu_pot:
                     ampu_pot = nd.potential
@@ -246,8 +247,8 @@ class BnetSample:
 
         """
         if not self.other_cond:
-            nd_x = self.name_to_nd['x']
-            nd_y = self.name_to_nd['y']
+            nd_x = self.nn_to_nd['x']
+            nd_y = self.nn_to_nd['y']
 
             arr_xy = in_pot.get_new_marginal(
                 [nd_x, nd_y]).pot_arr
@@ -258,9 +259,9 @@ class BnetSample:
             pot_y_bar_x.normalize_self()
             return pot_y_bar_x.pot_arr
         else:
-            nd_x = self.name_to_nd['x']
-            nd_y = self.name_to_nd['y']
-            nd_z = self.name_to_nd[self.other_cond]
+            nd_x = self.nn_to_nd['x']
+            nd_y = self.nn_to_nd['y']
+            nd_z = self.nn_to_nd[self.other_cond]
             arr_xzy = in_pot.get_new_marginal(
                 [nd_x, nd_z, nd_y]).pot_arr
             pot_y_bar_x_z = DiscreteCondPot(
@@ -281,20 +282,23 @@ class BnetSample:
         """
         if not self.other_cond:
             print()
-            print(f"full P(y|x) for Bnet{self.sample_num}:")
+            print(f"full P(y|x) for Bnet{self.sample_num} "
+                  f"(determined from PO data):")
             pprint(self.full_prob_y_bar_x)
             print()
-            print(f"amputated P(y|x) for Bnet{self.sample_num}:"
-                  f" (REQUIRES RCT)")
+            print(f"amputated P(y|x) for Bnet{self.sample_num} "
+                  f"(determined from RCT data):")
             pprint(self.ampu_prob_y_bar_x)
         else:
             print()
             print(f"full P(y|x, {self.other_cond}) for "
-                  f"Bnet{self.sample_num}:")
+                  f"Bnet{self.sample_num} "
+                  f"(determined from PO data):")
             pprint(self.full_prob_y_bar_x)
             print()
             print(f"amputated P(y|x, {self.other_cond}) for "
-                  f"Bnet{self.sample_num}: (REQUIRES RCT)")
+                  f"Bnet{self.sample_num} "
+                  f"(determined from RCT data):")
             pprint(self.ampu_prob_y_bar_x)
 
     def print_CPTs(self):

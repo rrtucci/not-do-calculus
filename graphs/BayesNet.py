@@ -214,21 +214,21 @@ class BayesNet(Dag):
         bt.read_bif(path)
         nodes = set()
         name_to_nd = {}
-        for k, nd_name in enumerate(bt.nd_sizes.keys()):
-            node = BayesNode(k, nd_name)
-            node.state_names = bt.states[nd_name]
+        for k, nn in enumerate(bt.nd_sizes.keys()):
+            node = BayesNode(k, nn)
+            node.state_names = bt.states[nn]
             node.size = len(node.state_names)
             node.forget_all_evidence()
             nodes |= {node}
-            name_to_nd[nd_name] = node
-        for nd_name, pa_name_list in bt.parents.items():
-            node = name_to_nd[nd_name]
+            name_to_nd[nn] = node
+        for nn, pa_name_list in bt.parents.items():
+            node = name_to_nd[nn]
             for pa_name in pa_name_list:
                 pa = name_to_nd[pa_name]
                 node.add_parent(pa)
 
-        for nd_name, parent_names in bt.parents.items():
-            node = name_to_nd[nd_name]
+        for nn, parent_names in bt.parents.items():
+            node = name_to_nd[nn]
             num_pa = len(parent_names)
             parents = [name_to_nd[pa_name] for pa_name in parent_names]
             if num_pa == 0:
@@ -236,7 +236,7 @@ class BayesNet(Dag):
             else:
                 node.potential = DiscreteCondPot(
                     is_quantum, parents + [node])
-            node.potential.pot_arr = bt.pot_arrays[nd_name]
+            node.potential.pot_arr = bt.pot_arrays[nn]
 
         return BayesNet(nodes)
 

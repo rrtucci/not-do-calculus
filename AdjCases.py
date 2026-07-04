@@ -112,7 +112,7 @@ class AdjCases:
         -------
         Potential
         """
-        # nd_h = self.name_to_nd['h']
+        # nd_h = self.nn_to_nd['h']
         nd_m = self.name_to_nd['m']
         nd_x = self.name_to_nd['x']
         nd_y = self.name_to_nd['y']
