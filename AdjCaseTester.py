@@ -234,5 +234,5 @@ if __name__ == "__main__":
 
 
     # main_backdoor(False, False)
-    # main_frontdoor(False, False)
-    main_napkin(5, False, False)
+    main_frontdoor(False, False)
+    # main_napkin(5, False, False)
