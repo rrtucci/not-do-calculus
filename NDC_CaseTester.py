@@ -1,7 +1,8 @@
 from NDC_Cases import *
 from NDC_BnetMaker import *
+from NDC_Tester import *
 
-class NDC_CaseTester:
+class NDC_CaseTester(NDC_Tester):
     """
     Attributes
     ----------
@@ -10,14 +11,15 @@ class NDC_CaseTester:
     adj_case: NDC_Cases
     adj_full_prob_y_bar_x: np.array
     bnet_maker: NDC_BnetMaker
-    empty_adj: bool
+    null_adj: bool
 
     """
 
     def __init__(self,
                  bnet_maker,
                  adj_version=1,
-                 null_adj = False):
+                 re_randomize_hidden_nds=True,
+                 null_adj=False):
         """
 
         Parameters
@@ -28,10 +30,12 @@ class NDC_CaseTester:
             currently 4 adjustment formulae that are tested
         null_adj: bool
         """
-        self.bnet_maker = bnet_maker
-        self.empty_adj = null_adj
-        self.adj_ampu_prob_y_bar_x = None
-        self.adj_full_prob_y_bar_x = None
+        NDC_Tester.__init__(self, bnet_maker, null_adj)
+        # self.bnet_maker = bnet_maker
+        # self.null_adj = null_adj
+        # self.adj_ampu_prob_y_bar_x = None
+        # self.adj_full_prob_y_bar_x = None
+        self.re_randomize_hidden_nds =  re_randomize_hidden_nds
         self.adj_case = NDC_Cases(bnet_maker.nn_to_nd,
                                   bnet_maker.dot_file,
                                   adj_version)
@@ -49,7 +53,7 @@ class NDC_CaseTester:
         None
 
         """
-        if self.empty_adj:
+        if self.null_adj:
             self.adj_ampu_prob_y_bar_x = \
                 self.bnet_maker.ampu_prob_y_bar_x
             self.adj_full_prob_y_bar_x = \
@@ -60,41 +64,9 @@ class NDC_CaseTester:
             self.adj_full_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
                 self.adj_case.adj_pot_method(self.bnet_maker.full_pot))
 
-    def print_adj_full_and_ampu_prob_y_bar_x(self, verbose):
-        """
 
-        Returns
-        -------
-        None
-
-        """
-        if not self.bnet_maker.other_cond:
-            print(f"adjusted P(y|x) from full_pot for "
-                  f"Bnet{self.bnet_maker.sample_num} "
-                  f"(determined from PO data):")
-            pprint(self.adj_full_prob_y_bar_x)
-            if verbose:
-                print()
-                print(f"adjusted P(y|x) from ampu_pot for "
-                      f"Bnet{self.bnet_maker.sample_num} "
-                      f"(determined from RCT data):")
-                pprint(self.adj_ampu_prob_y_bar_x)
-        else:
-            print(f"adjusted P(y|x, {self.bnet_maker.other_cond}) "
-                  f"from full_pot for "
-                  f"Bnet{self.bnet_maker.sample_num} "
-                  f"(determined from PO data):")
-            pprint(self.adj_full_prob_y_bar_x)
-            if verbose:
-                print()
-                print(f"adjusted P(y|x, {self.bnet_maker.other_cond}) "
-                      f"from ampu_pot for "
-                      f"Bnet{self.bnet_maker.sample_num} "
-                      f"(determined from RCT data):")
-                pprint(self.adj_ampu_prob_y_bar_x)
 
     def print_adj_report(self,
-                         re_randomize_hidden_nds=True,
                          verbose=False):
         """
         This method and the analogous one `print_all_prob_y_bar_x_z` are the
@@ -117,7 +89,6 @@ class NDC_CaseTester:
 
         Parameters
         ----------
-        re_randomize_hidden_nds: bool
         verbose: bool
             if this is set to True, the method prints also the CPT of each node
             of the bnet.
@@ -128,7 +99,7 @@ class NDC_CaseTester:
 
         """
         num_samples = 1
-        if re_randomize_hidden_nds:
+        if self.re_randomize_hidden_nds:
             num_samples = 2
 
         for k in range(num_samples):
@@ -136,13 +107,13 @@ class NDC_CaseTester:
                 print("------------------------------")
                 self.bnet_maker.randomize_these_nodes(
                     self.bnet_maker.hidden_nns)
+                self.calc_adj_prob_y_bar_x()
             print(f"Random Bnet{self.bnet_maker.sample_num}:")
             if verbose:
                 self.bnet_maker.print_CPTs()
             self.bnet_maker.print_full_and_ampu_prob_y_bar_x()
 
             print()
-            self.calc_adj_prob_y_bar_x()
             self.print_adj_full_and_ampu_prob_y_bar_x(verbose)
             passed = self.conduct_closeness_test()
             print()
@@ -152,18 +123,6 @@ class NDC_CaseTester:
                 print("Last 2 matrices are not close so INVALID adjustment")
 
 
-    def conduct_closeness_test(self):
-        """
-        verbose: bool
-
-        Returns
-        -------
-        bool
-
-        """
-        passed_test = np.allclose(self.adj_full_prob_y_bar_x,
-                           self.bnet_maker.ampu_prob_y_bar_x)
-        return passed_test
 
 
 if __name__ == "__main__":

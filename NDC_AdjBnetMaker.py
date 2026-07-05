@@ -4,7 +4,7 @@ from NDC_BnetMaker import *
 
 GLUE = ">"
 class NDC_AdjBnetMaker(NDC_BnetMaker):
-    def __init__(self, bnet_maker, hidden_nn_subs):
+    def __init__(self, bnet_maker, subs):
         NDC_BnetMaker.__init__(self,
                                bnet_maker.dot_file,
                                bnet_maker.hidden_nns,
@@ -19,28 +19,29 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
         
         
         self.bnet_maker = bnet_maker
-        self.hidden_nn_subs = hidden_nn_subs
+        self.subs = subs
 
-        self.nn_to_sub = \
-            {nn: nn for nn in bnet_maker.nns}
-        for k in range(len(bnet_maker.hidden_nns)):
-            self.nn_to_sub[bnet_maker.hidden_nns[k]] = \
-                hidden_nn_subs[k]
+        self.nn_to_sub = NDC_AdjBnetMaker.get_nn_to_sub(
+            bnet_maker.nns, bnet_maker.hidden_nns, subs
+        )
 
-        self.nn_to_parents = NDC_AdjBnetMaker.get_nn_to_parents(
-            self.arrows, self.nns)
-        self.valid_sub = NDC_AdjBnetMaker.substitution_is_valid(
-            self.nn_to_parents, self.nn_to_sub)
-        if self.valid_sub:
-            self.bnet = self.create_random_bnet()
-            self.nn_to_nd = {name: self.bnet.get_node_named(name)
-                             for name in self.nns}
-            self.ampu_pot = None
-            self.full_pot = None
-            self.ampu_prob_y_bar_x = None
-            self.full_prob_y_bar_x = None
-            self.calc_full_and_ampu_pots()
-            self.calc_full_and_ampu_probs()
+        self.bnet = self.create_random_bnet()
+        self.nn_to_nd = {name: self.bnet.get_node_named(name)
+                         for name in self.nns}
+        self.ampu_pot = None
+        self.full_pot = None
+        self.ampu_prob_y_bar_x = None
+        self.full_prob_y_bar_x = None
+        self.calc_full_and_ampu_pots()
+        self.calc_full_and_ampu_probs()
+
+    @staticmethod
+    def get_nn_to_sub(nns, hidden_nns, subs):
+        nn_to_sub = \
+            {nn: nn for nn in nns}
+        for k in range(len(hidden_nns)):
+            nn_to_sub[hidden_nns[k]] = subs[k]
+        return nn_to_sub
 
     @staticmethod
     def bnet_has_x_parent_that_is_hidden(arrows, hidden_nns):
@@ -49,25 +50,7 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
                 return True
         return False
     
-    @staticmethod
-    def get_nn_to_parents(arrows, nns):
-        #nn = node name
-        nn_to_parents = {nn:[] for nn in nns}
-        for nn in nns:
-            for arrow in arrows:
-                pa, child = arrow
-                nn_to_parents[child].append(pa)
-        return nn_to_parents
-    
-    @staticmethod
-    def substitution_is_valid(nn_to_parents, nn_to_sub):
-        for nn, parents in nn_to_parents.items():
-            sub_parents = [nn_to_sub[nn] for nn in parents]
-            print("nn, parents, sub_parents", nn, parents, sub_parents)
-            if len(sub_parents) != len(set(sub_parents)):
-                return False
-        return True
-        
+
     def create_random_bnet(self):
         if not NDC_AdjBnetMaker.\
                 bnet_has_x_parent_that_is_hidden(self.arrows, 
@@ -105,17 +88,18 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
             self_nd.potential = DiscreteCondPot(False, 
                                                self_ord_nodes)
             ord_nns = [nd.name for nd in nd.potential.ord_nodes]
-            sub_ord_nns = [self.bnet_maker.nn_to_sub[nn]
-                           for nn in ord_nns]
+            sub_ord_nns = [self.nn_to_sub[nn] for nn in ord_nns]
 
-
-            if len(sub_ord_nns) == len(set(sub_ord_nns)):
+            len_list = len(sub_ord_nns)
+            len_set = len(set(sub_ord_nns))
+            if len_list == len_set:
                 num_pot = self.bnet_maker.full_pot.get_self_marginal(
-                    [self.nn_to_nd[nn] for nn in sub_ord_nns])
+                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns])
                 denom_pot = num_pot.get_self_marginal(
-                    [self.nn_to_nd[nn] for nn in sub_ord_nns[:-1]])
+                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns[:-1]])
                 self_nd.potential.pot_arr = (num_pot/denom_pot).pot_arr
             else:
+                assert len_list == len_set + 1
                 colon_list = []
                 k0 = sub_ord_nns.index(sub_ord_nns[-1])
                 for k in range(len(sub_ord_nns)):
@@ -123,18 +107,20 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
                         colon_list.append(slice(None))
                     else:
                         colon_list.append(None)
-                size_list = [self.nn_to_size[nn] for nn in sub_ord_nns]
+                size_list = [self.bnet_maker.nn_to_size[nn] for nn in
+                             sub_ord_nns]
                 # this removes first occurrence of sub_ord_nns[-1]
-                # second occurence at the end of list is kept
-                sub_ord_nns.remove(sub_ord_nns[-1])
+                # second occurrence at the end of list is kept
+                xx = sub_ord_nns.pop(k0)
+                assert xx ==  sub_ord_nns[-1]
                 num_pot = self.bnet_maker.full_pot.get_self_marginal(
-                    [self.nn_to_nd[nn] for nn in sub_ord_nns])
+                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns])
                 denom_pot = num_pot.get_self_marginal(
-                    [self.nn_to_nd[nn] for nn in sub_ord_nns[:-1]])
+                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns[:-1]])
                 small_pot_arr = (num_pot/denom_pot).pot_arr
                 self_nd.potential.pot_arr = \
                     np.broadcast_to(small_pot_arr[colon_list],
-                                    size_list)
+                                    tuple(size_list))
             # nd.potential.normalize_self()
         return bnet
         

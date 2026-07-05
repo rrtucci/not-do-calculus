@@ -4,6 +4,7 @@ def flatten(partition):
 from itertools import product
 from NDC_BnetMaker import *
 from NDC_AdjBnetMaker import *
+from NDC_Tester import *
 
 class NDC_Searcher:
     """
@@ -20,6 +21,29 @@ class NDC_Searcher:
         bnet_maker: NDC_BnetMaker
         """
         self.bnet_maker = bnet_maker
+        self.adj_bnet_maker = None
+
+    @staticmethod
+    def get_nn_to_parents(arrows, nns):
+        # nn = node name
+        nn_to_parents = {nn: [] for nn in nns}
+        for arrow in arrows:
+            pa, child = arrow
+            nn_to_parents[child].append(pa)
+        return nn_to_parents
+
+    @staticmethod
+    def substitution_is_valid(nn_to_parents, nn_to_sub):
+        valid = True
+        for nn, parents in nn_to_parents.items():
+            sub_parents = [nn_to_sub[nn] for nn in parents]
+            # print("czvb, nn, parents, sub_parents", nn, parents, sub_parents)
+            if len(sub_parents) != len(set(sub_parents)):
+                valid = False
+                break
+        # print("xxcv", "valid", valid)
+        # print()
+        return valid
 
 
     def conduct_search(self, verbose):
@@ -31,17 +55,36 @@ class NDC_Searcher:
         None
 
         """
-        num_hidden_nns = len(self.bnet_maker.hidden_nns)
-        nns = self.bnet_maker.nns
-        for subs in product(nns, repeat=num_hidden_nns):
+        hidden_nns = self.bnet_maker.hidden_nns
+        num_hidden_nns = len(hidden_nns)
+        non_hidden_nns = [x for x in self.bnet_maker.nns if x not in
+                          hidden_nns]
+
+        for subs in product(non_hidden_nns, repeat=num_hidden_nns):
             subs = list(subs)
-            adj_candy = AdjCandidate(self.bnet_maker, subs)
-            if not adj_candy.valid_sub:
+
+            nn_to_parents = NDC_Searcher.get_nn_to_parents(
+                self.bnet_maker.arrows, self.bnet_maker.nns)
+            nn_to_sub = NDC_AdjBnetMaker.get_nn_to_sub(
+                self.bnet_maker.nns,
+                self.bnet_maker.hidden_nns,
+                subs
+            )
+
+            valid_subs =NDC_Searcher.substitution_is_valid(
+                nn_to_parents, nn_to_sub)
+            if valid_subs:
+                print("===================")
                 print(f"{self.bnet_maker.hidden_nns}>{subs}"
                       f" is a VALID substitution")
+                self.adj_bnet_maker = NDC_AdjBnetMaker(self.bnet_maker,
+                                             subs)
+                tester = NDC_Tester(self.adj_bnet_maker)
+                tester.print_adj_report(False, False)
             else:
-                print(f"{self.bnet_maker.hidden_nns}>{subs}"
-                      f" is a INVALID substitution")
+                if verbose:
+                    print(f"{self.bnet_maker.hidden_nns}>{subs}"
+                          f" is a INVALID substitution")
 
 
 if __name__ == "__main__":
@@ -85,5 +128,5 @@ if __name__ == "__main__":
         searcher.conduct_search(verbose=verbose)
 
 
-    # main_backdoor(True, True)
-    main_frontdoor(True, True)
+    # main_backdoor(False, False)
+    main_frontdoor(False, False)

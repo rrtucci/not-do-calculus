@@ -57,13 +57,13 @@ class NDC_BnetMaker:
         self.dot_file = dot_file
         self.hidden_nns = hidden_nns
         self.sample_num = 1
-        self.nns, self.arrows = DotTool.read_dot_file(dot_file)
-        self.nn_to_size = self.fill_nn_to_size(nn_to_size)
         if other_cond:
             assert isinstance(other_cond, str)
         self.other_cond = other_cond
         self.import_bnet = import_bnet
 
+        self.nns, self.arrows = None, None
+        self.nn_to_size = None
         self.bnet = None
         self.nn_to_nd = None
         self.ampu_pot = None
@@ -71,9 +71,12 @@ class NDC_BnetMaker:
         self.ampu_prob_y_bar_x = None
         self.full_prob_y_bar_x = None
         if not import_bnet:
+            self.nns, self.arrows = DotTool.read_dot_file(dot_file)
+            self.nn_to_size = self.fill_nn_to_size(nn_to_size)
             self.bnet = self.create_random_bnet()
             self.calc_full_and_ampu_pots()
             self.calc_full_and_ampu_probs()
+
 
     def fill_nn_to_size(self, nn_to_size):
         """
