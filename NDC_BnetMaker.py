@@ -4,7 +4,7 @@ from pprint import pprint
 from DotTool import *
 
 
-class NDC_BnetSample:
+class NDC_BnetMaker:
     """
     Attributes
     ----------

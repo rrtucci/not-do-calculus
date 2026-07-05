@@ -2,24 +2,24 @@ from itertools import chain
 def flatten(partition):
     return list(chain.from_iterable(partition))
 from itertools import product
-from NDC_BnetSample import *
-from NDC_AdjBnetSample import *
+from NDC_BnetMaker import *
+from NDC_AdjBnetMaker import *
 
 class NDC_Searcher:
     """
     Attributes
     ----------
-    bnet_sample: NDC_BnetSample
+    bnet_maker: NDC_BnetMaker
     """
 
-    def __init__(self, bnet_sample):
+    def __init__(self, bnet_maker):
         """
 
         Parameters
         ----------
-        bnet_sample: NDC_BnetSample
+        bnet_maker: NDC_BnetMaker
         """
-        self.bnet_sample = bnet_sample
+        self.bnet_maker = bnet_maker
 
 
     def conduct_search(self, verbose):
@@ -31,16 +31,16 @@ class NDC_Searcher:
         None
 
         """
-        num_hidden_nns = len(self.bnet_sample.hidden_nns)
-        nns = self.bnet_sample.nns
+        num_hidden_nns = len(self.bnet_maker.hidden_nns)
+        nns = self.bnet_maker.nns
         for subs in product(nns, repeat=num_hidden_nns):
             subs = list(subs)
-            adj_candy = AdjCandidate(self.bnet_sample, subs)
+            adj_candy = AdjCandidate(self.bnet_maker, subs)
             if not adj_candy.valid_sub:
-                print(f"{self.bnet_sample.hidden_nns}>{subs}"
+                print(f"{self.bnet_maker.hidden_nns}>{subs}"
                       f" is a VALID substitution")
             else:
-                print(f"{self.bnet_sample.hidden_nns}>{subs}"
+                print(f"{self.bnet_maker.hidden_nns}>{subs}"
                       f" is a INVALID substitution")
 
 
@@ -57,11 +57,11 @@ if __name__ == "__main__":
         None
 
         """
-        bnet_sample = NDC_BnetSample(dot_file="dot_atlas/back-door.dot",
-                                     hidden_nns=[])
+        bnet_maker = NDC_BnetMaker(dot_file="dot_atlas/back-door.dot",
+                                    hidden_nns=[])
         if draw:
-            bnet_sample.draw(jupyter=False)
-        searcher = NDC_Searcher(bnet_sample)
+            bnet_maker.draw(jupyter=False)
+        searcher = NDC_Searcher(bnet_maker)
         searcher.conduct_search(verbose=verbose)
 
 
@@ -77,11 +77,11 @@ if __name__ == "__main__":
         None
 
         """
-        bnet_sample = NDC_BnetSample(dot_file="dot_atlas/front-door.dot",
-                                     hidden_nns=["h"])
+        bnet_maker = NDC_BnetMaker(dot_file="dot_atlas/front-door.dot",
+                                    hidden_nns=["h"])
         if draw:
-            bnet_sample.draw(jupyter=False)
-        searcher = NDC_Searcher(bnet_sample)
+            bnet_maker.draw(jupyter=False)
+        searcher = NDC_Searcher(bnet_maker)
         searcher.conduct_search(verbose=verbose)
 
 

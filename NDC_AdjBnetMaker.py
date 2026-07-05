@@ -1,35 +1,35 @@
 from numpy.lib.stride_tricks import broadcast_to
 
-from NDC_BnetSample import *
+from NDC_BnetMaker import *
 
 GLUE = ">"
-class NDC_AdjBnetSample(NDC_BnetSample):
-    def __init__(self, bnet_sample, hidden_nn_subs):
-        NDC_BnetSample.__init__(self, 
-                                bnet_sample.dot_file,
-                                bnet_sample.hidden_nns,
-                                import_bnet=True)
-        self.arrows = bnet_sample.arrows
-        # self.dot_file = bnet_sample.dot_file
-        # self.hidden_nns = bnet_sample.hidden_nns
-        self.nn_to_size = bnet_sample.nn_to_size
-        self.nns = bnet_sample.nns
-        self.other_cond = bnet_sample.other_cond
-        # self.import_bnet = bnet_sample.import_bnet
+class NDC_AdjBnetMaker(NDC_BnetMaker):
+    def __init__(self, bnet_maker, hidden_nn_subs):
+        NDC_BnetMaker.__init__(self,
+                               bnet_maker.dot_file,
+                               bnet_maker.hidden_nns,
+                               import_bnet=True)
+        self.arrows = bnet_maker.arrows
+        # self.dot_file = bnet_maker.dot_file
+        # self.hidden_nns = bnet_maker.hidden_nns
+        self.nn_to_size = bnet_maker.nn_to_size
+        self.nns = bnet_maker.nns
+        self.other_cond = bnet_maker.other_cond
+        # self.import_bnet = bnet_maker.import_bnet
         
         
-        self.bnet_sample = bnet_sample
+        self.bnet_maker = bnet_maker
         self.hidden_nn_subs = hidden_nn_subs
 
         self.nn_to_sub = \
-            {nn: nn for nn in bnet_sample.nns}
-        for k in range(len(bnet_sample.hidden_nns)):
-            self.nn_to_sub[bnet_sample.hidden_nns[k]] = \
+            {nn: nn for nn in bnet_maker.nns}
+        for k in range(len(bnet_maker.hidden_nns)):
+            self.nn_to_sub[bnet_maker.hidden_nns[k]] = \
                 hidden_nn_subs[k]
 
-        self.nn_to_parents = NDC_AdjBnetSample.get_nn_to_parents(
+        self.nn_to_parents = NDC_AdjBnetMaker.get_nn_to_parents(
             self.arrows, self.nns)
-        self.valid_sub = NDC_AdjBnetSample.substitution_is_valid(
+        self.valid_sub = NDC_AdjBnetMaker.substitution_is_valid(
             self.nn_to_parents, self.nn_to_sub)
         if self.valid_sub:
             self.bnet = self.create_random_bnet()
@@ -69,15 +69,15 @@ class NDC_AdjBnetSample(NDC_BnetSample):
         return True
         
     def create_random_bnet(self):
-        if not NDC_AdjBnetSample.\
+        if not NDC_AdjBnetMaker.\
                 bnet_has_x_parent_that_is_hidden(self.arrows, 
                                                  self.hidden_nns):
-            bnet = self.bnet_sample.bnet
+            bnet = self.bnet_maker.bnet
             return bnet
 
         for h_name in self.hidden_nns:
             self.nn_to_size[h_name]= \
-                self.bnet_sample.nn_to_size[self.nn_to_sub[h_name]]
+                self.bnet_maker.nn_to_size[self.nn_to_sub[h_name]]
             
         bnet_nodes = []
         for k, node_name in enumerate(self.nns):
@@ -95,7 +95,7 @@ class NDC_AdjBnetSample(NDC_BnetSample):
             
 
         nd_to_self_nd = {}
-        for nn, nd in self.bnet_sample.nn_to_nd.items():
+        for nn, nd in self.bnet_maker.nn_to_nd.items():
             nd_to_self_nd[nd] = self.nn_to_nd[nn]
         
         for nd, self_nd in nd_to_self_nd.items():
@@ -105,12 +105,12 @@ class NDC_AdjBnetSample(NDC_BnetSample):
             self_nd.potential = DiscreteCondPot(False, 
                                                self_ord_nodes)
             ord_nns = [nd.name for nd in nd.potential.ord_nodes]
-            sub_ord_nns = [self.bnet_sample.nn_to_sub[nn]
+            sub_ord_nns = [self.bnet_maker.nn_to_sub[nn]
                            for nn in ord_nns]
 
 
             if len(sub_ord_nns) == len(set(sub_ord_nns)):
-                num_pot = self.bnet_sample.full_pot.get_self_marginal(
+                num_pot = self.bnet_maker.full_pot.get_self_marginal(
                     [self.nn_to_nd[nn] for nn in sub_ord_nns])
                 denom_pot = num_pot.get_self_marginal(
                     [self.nn_to_nd[nn] for nn in sub_ord_nns[:-1]])
@@ -127,7 +127,7 @@ class NDC_AdjBnetSample(NDC_BnetSample):
                 # this removes first occurrence of sub_ord_nns[-1]
                 # second occurence at the end of list is kept
                 sub_ord_nns.remove(sub_ord_nns[-1])
-                num_pot = self.bnet_sample.full_pot.get_self_marginal(
+                num_pot = self.bnet_maker.full_pot.get_self_marginal(
                     [self.nn_to_nd[nn] for nn in sub_ord_nns])
                 denom_pot = num_pot.get_self_marginal(
                     [self.nn_to_nd[nn] for nn in sub_ord_nns[:-1]])

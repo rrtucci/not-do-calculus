@@ -1,5 +1,5 @@
 from NDC_Cases import *
-from NDC_BnetSample import *
+from NDC_BnetMaker import *
 
 class NDC_CaseTester:
     """
@@ -9,31 +9,31 @@ class NDC_CaseTester:
     adj_ampu_prob_y_bar_x: np.array
     adj_case: NDC_Cases
     adj_full_prob_y_bar_x: np.array
-    bnet_sample: NDC_BnetSample
+    bnet_maker: NDC_BnetMaker
     empty_adj: bool
 
     """
 
     def __init__(self,
-                 bnet_sample,
+                 bnet_maker,
                  adj_version=1,
                  null_adj = False):
         """
 
         Parameters
         ----------
-        bnet_sample: NDC_BnetSample
+        bnet_maker: NDC_BnetMaker
         adj_version: int
             the adjustment formula version. For the Napkin OP, there are
             currently 4 adjustment formulae that are tested
         null_adj: bool
         """
-        self.bnet_sample = bnet_sample
+        self.bnet_maker = bnet_maker
         self.empty_adj = null_adj
         self.adj_ampu_prob_y_bar_x = None
         self.adj_full_prob_y_bar_x = None
-        self.adj_case = NDC_Cases(bnet_sample.nn_to_nd,
-                                  bnet_sample.dot_file,
+        self.adj_case = NDC_Cases(bnet_maker.nn_to_nd,
+                                  bnet_maker.dot_file,
                                   adj_version)
         self.calc_adj_prob_y_bar_x()
 
@@ -51,14 +51,14 @@ class NDC_CaseTester:
         """
         if self.empty_adj:
             self.adj_ampu_prob_y_bar_x = \
-                self.bnet_sample.ampu_prob_y_bar_x
+                self.bnet_maker.ampu_prob_y_bar_x
             self.adj_full_prob_y_bar_x = \
-                self.bnet_sample.full_prob_y_bar_x
+                self.bnet_maker.full_prob_y_bar_x
         else:
-            self.adj_ampu_prob_y_bar_x = self.bnet_sample.get_prob_y_bar_x(
-                self.adj_case.adj_pot_method(self.bnet_sample.ampu_pot))
-            self.adj_full_prob_y_bar_x = self.bnet_sample.get_prob_y_bar_x(
-                self.adj_case.adj_pot_method(self.bnet_sample.full_pot))
+            self.adj_ampu_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
+                self.adj_case.adj_pot_method(self.bnet_maker.ampu_pot))
+            self.adj_full_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
+                self.adj_case.adj_pot_method(self.bnet_maker.full_pot))
 
     def print_adj_full_and_ampu_prob_y_bar_x(self, verbose):
         """
@@ -68,28 +68,28 @@ class NDC_CaseTester:
         None
 
         """
-        if not self.bnet_sample.other_cond:
+        if not self.bnet_maker.other_cond:
             print(f"adjusted P(y|x) from full_pot for "
-                  f"Bnet{self.bnet_sample.sample_num} "
+                  f"Bnet{self.bnet_maker.sample_num} "
                   f"(determined from PO data):")
             pprint(self.adj_full_prob_y_bar_x)
             if verbose:
                 print()
                 print(f"adjusted P(y|x) from ampu_pot for "
-                      f"Bnet{self.bnet_sample.sample_num} "
+                      f"Bnet{self.bnet_maker.sample_num} "
                       f"(determined from RCT data):")
                 pprint(self.adj_ampu_prob_y_bar_x)
         else:
-            print(f"adjusted P(y|x, {self.bnet_sample.other_cond}) "
+            print(f"adjusted P(y|x, {self.bnet_maker.other_cond}) "
                   f"from full_pot for "
-                  f"Bnet{self.bnet_sample.sample_num} "
+                  f"Bnet{self.bnet_maker.sample_num} "
                   f"(determined from PO data):")
             pprint(self.adj_full_prob_y_bar_x)
             if verbose:
                 print()
-                print(f"adjusted P(y|x, {self.bnet_sample.other_cond}) "
+                print(f"adjusted P(y|x, {self.bnet_maker.other_cond}) "
                       f"from ampu_pot for "
-                      f"Bnet{self.bnet_sample.sample_num} "
+                      f"Bnet{self.bnet_maker.sample_num} "
                       f"(determined from RCT data):")
                 pprint(self.adj_ampu_prob_y_bar_x)
 
@@ -100,8 +100,8 @@ class NDC_CaseTester:
         This method and the analogous one `print_all_prob_y_bar_x_z` are the
         only ones used in the jupyter notebooks. All others are meant to be
         internal. This method prints 4 things for each bnet.
-        `num_bnet_samples=2` means the default is two bnets, but it will do only
-        one bnet if you input `num_bnet_samples=1`
+        `num_bnet_makers=2` means the default is two bnets, but it will do only
+        one bnet if you input `num_bnet_makers=1`
 
         1. full P(y|x) for OP
 
@@ -134,12 +134,12 @@ class NDC_CaseTester:
         for k in range(num_samples):
             if k == 1:
                 print("------------------------------")
-                self.bnet_sample.randomize_these_nodes(
-                    self.bnet_sample.hidden_nns)
-            print(f"Random Bnet{self.bnet_sample.sample_num}:")
+                self.bnet_maker.randomize_these_nodes(
+                    self.bnet_maker.hidden_nns)
+            print(f"Random Bnet{self.bnet_maker.sample_num}:")
             if verbose:
-                self.bnet_sample.print_CPTs()
-            self.bnet_sample.print_full_and_ampu_prob_y_bar_x()
+                self.bnet_maker.print_CPTs()
+            self.bnet_maker.print_full_and_ampu_prob_y_bar_x()
 
             print()
             self.calc_adj_prob_y_bar_x()
@@ -162,7 +162,7 @@ class NDC_CaseTester:
 
         """
         passed_test = np.allclose(self.adj_full_prob_y_bar_x,
-                           self.bnet_sample.ampu_prob_y_bar_x)
+                           self.bnet_maker.ampu_prob_y_bar_x)
         return passed_test
 
 
@@ -179,11 +179,11 @@ if __name__ == "__main__":
         None
 
         """
-        bnet_sample = NDC_BnetSample(dot_file="dot_atlas/back-door.dot",
-                                     hidden_nns=[])
+        bnet_maker = NDC_BnetMaker(dot_file="dot_atlas/back-door.dot",
+                                    hidden_nns=[])
         if draw:
-            bnet_sample.draw(jupyter=False)
-        tester = NDC_CaseTester(bnet_sample)
+            bnet_maker.draw(jupyter=False)
+        tester = NDC_CaseTester(bnet_maker)
         tester.print_adj_report(verbose=verbose)
 
 
@@ -199,11 +199,11 @@ if __name__ == "__main__":
         None
 
         """
-        bnet_sample = NDC_BnetSample(dot_file="dot_atlas/front-door.dot",
-                                     hidden_nns=["h"])
+        bnet_maker = NDC_BnetMaker(dot_file="dot_atlas/front-door.dot",
+                                    hidden_nns=["h"])
         if draw:
-            bnet_sample.draw(jupyter=False)
-        tester = NDC_CaseTester(bnet_sample)
+            bnet_maker.draw(jupyter=False)
+        tester = NDC_CaseTester(bnet_maker)
         tester.print_adj_report(verbose=verbose)
 
 
@@ -220,16 +220,16 @@ if __name__ == "__main__":
 ,
         """
         if adj_version == 4:
-            bnet_sample = NDC_BnetSample(dot_file="dot_atlas/napkin.dot",
-                                         hidden_nns=["u_1", "u_2"],
-                                         other_cond="z",
-                                         nn_to_size={"z": 3})
+            bnet_maker = NDC_BnetMaker(dot_file="dot_atlas/napkin.dot",
+                                        hidden_nns=["u_1", "u_2"],
+                                        other_cond="z",
+                                        nn_to_size={"z": 3})
         else:
-            bnet_sample = NDC_BnetSample(dot_file="dot_atlas/napkin.dot",
-                                         hidden_nns=["u_1", "u_2"])
+            bnet_maker = NDC_BnetMaker(dot_file="dot_atlas/napkin.dot",
+                                        hidden_nns=["u_1", "u_2"])
         if draw:
-            bnet_sample.draw(jupyter=False)
-        tester = NDC_CaseTester(bnet_sample, adj_version=adj_version)
+            bnet_maker.draw(jupyter=False)
+        tester = NDC_CaseTester(bnet_maker, adj_version=adj_version)
         tester.print_adj_report(verbose=verbose)
 
 
