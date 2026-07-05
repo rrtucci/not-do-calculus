@@ -72,8 +72,6 @@ class NDC_BnetSample:
         self.full_prob_y_bar_x = None
         if not import_bnet:
             self.bnet = self.create_random_bnet()
-            self.nn_to_nd = {name: self.bnet.get_node_named(name)
-                             for name in self.nns}
             self.calc_full_and_ampu_pots()
             self.calc_full_and_ampu_probs()
 
@@ -138,6 +136,8 @@ class NDC_BnetSample:
             nd.size = self.nn_to_size[node_name]
             bnet_nodes.append(nd)
         bnet = BayesNet(set(bnet_nodes))
+        self.nn_to_nd = {name: bnet.get_node_named(name)
+                         for name in self.nns}
 
         for arrow in self.arrows:
             pa_nd = self.nn_to_nd[arrow[0]]
