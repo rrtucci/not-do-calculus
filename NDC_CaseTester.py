@@ -1,15 +1,15 @@
-from AdjCases import *
-from BnetSample import *
+from NDC_Cases import *
+from NDC_BnetSample import *
 
-class AdjCaseTester:
+class NDC_CaseTester:
     """
     Attributes
     ----------
 
     adj_ampu_prob_y_bar_x: np.array
-    adj_case: AdjCases
+    adj_case: NDC_Cases
     adj_full_prob_y_bar_x: np.array
-    bnet_sample: BnetSample
+    bnet_sample: NDC_BnetSample
     empty_adj: bool
 
     """
@@ -22,7 +22,7 @@ class AdjCaseTester:
 
         Parameters
         ----------
-        bnet_sample: BnetSample
+        bnet_sample: NDC_BnetSample
         adj_version: int
             the adjustment formula version. For the Napkin OP, there are
             currently 4 adjustment formulae that are tested
@@ -32,9 +32,9 @@ class AdjCaseTester:
         self.empty_adj = null_adj
         self.adj_ampu_prob_y_bar_x = None
         self.adj_full_prob_y_bar_x = None
-        self.adj_case = AdjCases(bnet_sample.nn_to_nd,
-                                 bnet_sample.dot_file,
-                                 adj_version)
+        self.adj_case = NDC_Cases(bnet_sample.nn_to_nd,
+                                  bnet_sample.dot_file,
+                                  adj_version)
         self.calc_adj_prob_y_bar_x()
 
     def calc_adj_prob_y_bar_x(self):
@@ -179,11 +179,11 @@ if __name__ == "__main__":
         None
 
         """
-        bnet_sample = BnetSample(dot_file="dot_atlas/back-door.dot",
-                                 hidden_nns=[])
+        bnet_sample = NDC_BnetSample(dot_file="dot_atlas/back-door.dot",
+                                     hidden_nns=[])
         if draw:
             bnet_sample.draw(jupyter=False)
-        tester = AdjCaseTester(bnet_sample)
+        tester = NDC_CaseTester(bnet_sample)
         tester.print_adj_report(verbose=verbose)
 
 
@@ -199,11 +199,11 @@ if __name__ == "__main__":
         None
 
         """
-        bnet_sample = BnetSample(dot_file="dot_atlas/front-door.dot",
-                                 hidden_nns=["h"])
+        bnet_sample = NDC_BnetSample(dot_file="dot_atlas/front-door.dot",
+                                     hidden_nns=["h"])
         if draw:
             bnet_sample.draw(jupyter=False)
-        tester = AdjCaseTester(bnet_sample)
+        tester = NDC_CaseTester(bnet_sample)
         tester.print_adj_report(verbose=verbose)
 
 
@@ -220,16 +220,16 @@ if __name__ == "__main__":
 ,
         """
         if adj_version == 4:
-            bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
-                                     hidden_nns=["u_1", "u_2"],
-                                     other_cond="z",
-                                     nn_to_size={"z": 3})
+            bnet_sample = NDC_BnetSample(dot_file="dot_atlas/napkin.dot",
+                                         hidden_nns=["u_1", "u_2"],
+                                         other_cond="z",
+                                         nn_to_size={"z": 3})
         else:
-            bnet_sample = BnetSample(dot_file="dot_atlas/napkin.dot",
-                                     hidden_nns=["u_1", "u_2"])
+            bnet_sample = NDC_BnetSample(dot_file="dot_atlas/napkin.dot",
+                                         hidden_nns=["u_1", "u_2"])
         if draw:
             bnet_sample.draw(jupyter=False)
-        tester = AdjCaseTester(bnet_sample, adj_version=adj_version)
+        tester = NDC_CaseTester(bnet_sample, adj_version=adj_version)
         tester.print_adj_report(verbose=verbose)
 
 

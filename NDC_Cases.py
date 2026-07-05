@@ -17,7 +17,7 @@ The AFs considered are
 """
 
 
-class AdjCases:
+class NDC_Cases:
     """
     Attributes
     ----------

@@ -4,7 +4,7 @@ from pprint import pprint
 from DotTool import *
 
 
-class BnetSample:
+class NDC_BnetSample:
     """
     Attributes
     ----------
@@ -64,17 +64,18 @@ class BnetSample:
         self.other_cond = other_cond
         self.import_bnet = import_bnet
 
-        if not import_bnet:
-            self.bnet = self.create_random_bnet()
-        self.nn_to_nd = {name: self.bnet.get_node_named(name)
-                         for name in self.nns}
-
+        self.bnet = None
+        self.nn_to_nd = None
         self.ampu_pot = None
         self.full_pot = None
         self.ampu_prob_y_bar_x = None
         self.full_prob_y_bar_x = None
-        self.calc_full_and_ampu_pots()
-        self.calc_full_and_ampu_probs()
+        if not import_bnet:
+            self.bnet = self.create_random_bnet()
+            self.nn_to_nd = {name: self.bnet.get_node_named(name)
+                             for name in self.nns}
+            self.calc_full_and_ampu_pots()
+            self.calc_full_and_ampu_probs()
 
     def fill_nn_to_size(self, nn_to_size):
         """
@@ -137,9 +138,10 @@ class BnetSample:
             nd.size = self.nn_to_size[node_name]
             bnet_nodes.append(nd)
         bnet = BayesNet(set(bnet_nodes))
+
         for arrow in self.arrows:
-            pa_nd = bnet.get_node_named(arrow[0])
-            child_nd = bnet.get_node_named(arrow[1])
+            pa_nd = self.nn_to_nd[arrow[0]]
+            child_nd = self.nn_to_nd[arrow[1]]
             child_nd.add_parent(pa_nd)
 
         # print("ccvv", bnet.nodes)
@@ -172,7 +174,7 @@ class BnetSample:
         """
         self.sample_num += 1
         for name in some_node_names:
-            nd = self.bnet.get_node_named(name)
+            nd = self.nn_to_nd[name]
             nd.potential.set_to_random()
             nd.potential.normalize_self()
         self.calc_full_and_ampu_pots()
