@@ -4,34 +4,27 @@ from NDC_BnetMaker import *
 
 GLUE = ">"
 class NDC_AdjBnetMaker(NDC_BnetMaker):
-    def __init__(self, bnet_maker, subs):
+    def __init__(self,
+                 bnet_maker,
+                 subs,
+                 nn_to_size=None,
+                 other_cond=None):
         NDC_BnetMaker.__init__(self,
-                               bnet_maker.dot_file,
+                               bnet_maker.nns,
+                               bnet_maker.arrows,
                                bnet_maker.hidden_nns,
+                               nn_to_size=nn_to_size,
+                               other_cond=other_cond,
                                import_bnet=True)
-        self.arrows = bnet_maker.arrows
-        # self.dot_file = bnet_maker.dot_file
-        # self.hidden_nns = bnet_maker.hidden_nns
-        self.nn_to_size = bnet_maker.nn_to_size
-        self.nns = bnet_maker.nns
-        self.other_cond = bnet_maker.other_cond
-        # self.import_bnet = bnet_maker.import_bnet
-        
-        
+
+
         self.bnet_maker = bnet_maker
         self.subs = subs
+        self.nn_to_sub = NDC_AdjBnetMaker.get_nn_to_sub(self.nns,
+                                                        self.hidden_nns,
+                                                        subs)
 
-        self.nn_to_sub = NDC_AdjBnetMaker.get_nn_to_sub(
-            bnet_maker.nns, bnet_maker.hidden_nns, subs
-        )
-
-        self.bnet = self.create_random_bnet()
-        self.nn_to_nd = {name: self.bnet.get_node_named(name)
-                         for name in self.nns}
-        self.ampu_pot = None
-        self.full_pot = None
-        self.ampu_prob_y_bar_x = None
-        self.full_prob_y_bar_x = None
+        self.bnet, self.nn_to_nd = self.create_random_bnet()
         self.calc_full_and_ampu_pots()
         self.calc_full_and_ampu_probs()
 
@@ -56,7 +49,9 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
                 bnet_has_x_parent_that_is_hidden(self.arrows, 
                                                  self.hidden_nns):
             bnet = self.bnet_maker.bnet
-            return bnet
+            nn_to_nd = {name: self.bnet.get_node_named(name)
+                             for name in self.nns}
+            return bnet, nn_to_nd
 
         for h_name in self.hidden_nns:
             self.nn_to_size[h_name]= \
@@ -119,7 +114,7 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
                     [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns[:-1]])
                 small_pot_arr = (num_pot/denom_pot).pot_arr
                 self_nd.potential.pot_arr = \
-                    np.broadcast_to(small_pot_arr[colon_list],
+                    broadcast_to(small_pot_arr[colon_list],
                                     tuple(size_list))
             # nd.potential.normalize_self()
         return bnet

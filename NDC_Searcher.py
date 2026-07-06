@@ -4,7 +4,7 @@ def flatten(partition):
 from itertools import product
 from NDC_BnetMaker import *
 from NDC_AdjBnetMaker import *
-from NDC_Tester import *
+from NDC_SearchTester import *
 
 class NDC_Searcher:
     """
@@ -33,17 +33,17 @@ class NDC_Searcher:
         return nn_to_parents
 
     @staticmethod
-    def substitution_is_valid(nn_to_parents, nn_to_sub):
-        valid = True
+    def substitution_is_viable(nn_to_parents, nn_to_sub):
+        viable= True
         for nn, parents in nn_to_parents.items():
             sub_parents = [nn_to_sub[nn] for nn in parents]
             # print("czvb, nn, parents, sub_parents", nn, parents, sub_parents)
             if len(sub_parents) != len(set(sub_parents)):
-                valid = False
+                viable = False
                 break
-        # print("xxcv", "valid", valid)
+        # print("xxcv", "viable", viable)
         # print()
-        return valid
+        return viable
 
 
     def conduct_search(self, verbose):
@@ -71,24 +71,25 @@ class NDC_Searcher:
                 subs
             )
 
-            valid_subs =NDC_Searcher.substitution_is_valid(
+            viable_subs =NDC_Searcher.substitution_is_viable(
                 nn_to_parents, nn_to_sub)
-            if valid_subs:
+            if viable_subs:
                 print("===================")
                 print(f"{self.bnet_maker.hidden_nns}>{subs}"
-                      f" is a VALID substitution")
+                      f" is a VIABLE substitution")
                 self.adj_bnet_maker = NDC_AdjBnetMaker(self.bnet_maker,
                                              subs)
-                tester = NDC_Tester(self.adj_bnet_maker)
-                tester.print_adj_report(False, False)
+                tester = NDC_SearchTester(self.bnet_maker,
+                                          self.adj_bnet_maker)
+                tester.print_adj_report(False)
             else:
                 if verbose:
                     print(f"{self.bnet_maker.hidden_nns}>{subs}"
-                          f" is a INVALID substitution")
+                          f" is a NON-VIABLE substitution")
 
 
 if __name__ == "__main__":
-    def main_backdoor(draw, verbose):
+    def main_backdoor(verbose):
         """
         Parameters
         ----------
@@ -100,15 +101,16 @@ if __name__ == "__main__":
         None
 
         """
-        bnet_maker = NDC_BnetMaker(dot_file="dot_atlas/back-door.dot",
+        dot_file = "dot_atlas/back-door.dot"
+        nns, arrows = DotTool.read_dot_file(dot_file)
+        bnet_maker = NDC_BnetMaker(nns,
+                                   arrows,
                                     hidden_nns=[])
-        if draw:
-            bnet_maker.draw(jupyter=False)
         searcher = NDC_Searcher(bnet_maker)
         searcher.conduct_search(verbose=verbose)
 
 
-    def main_frontdoor(draw, verbose):
+    def main_frontdoor(verbose):
         """
         Parameters
         ----------
@@ -120,10 +122,11 @@ if __name__ == "__main__":
         None
 
         """
-        bnet_maker = NDC_BnetMaker(dot_file="dot_atlas/front-door.dot",
+        dot_file = "dot_atlas/front-door.dot"
+        nns, arrows = DotTool.read_dot_file(dot_file)
+        bnet_maker = NDC_BnetMaker(nns,
+                                   arrows,
                                     hidden_nns=["h"])
-        if draw:
-            bnet_maker.draw(jupyter=False)
         searcher = NDC_Searcher(bnet_maker)
         searcher.conduct_search(verbose=verbose)
 

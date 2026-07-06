@@ -3,6 +3,7 @@ from NDC_BnetMaker import *
 class NDC_Tester:
     def __init__(self,
                  bnet_maker,
+                 re_randomize_hidden_nds=False,
                  null_adj=False):
         """
 
@@ -15,9 +16,13 @@ class NDC_Tester:
         null_adj: bool
         """
         self.bnet_maker = bnet_maker
+        self.re_randomize_hidden_nds  = re_randomize_hidden_nds
         self.null_adj = null_adj
         self.adj_ampu_prob_y_bar_x = None
         self.adj_full_prob_y_bar_x = None
+
+    def calc_adj_prob_y_bar_x(self):
+        assert False
 
     def print_adj_full_and_ampu_prob_y_bar_x(self, verbose):
         """
@@ -84,19 +89,29 @@ class NDC_Tester:
         None
 
         """
-        print(f"Random Bnet{self.bnet_maker.sample_num}:")
-        if verbose:
-            self.bnet_maker.print_CPTs()
-        self.bnet_maker.print_full_and_ampu_prob_y_bar_x()
+        num_samples = 1
+        if self.re_randomize_hidden_nds:
+            num_samples = 2
 
-        print()
-        self.print_adj_full_and_ampu_prob_y_bar_x(verbose)
-        passed = self.conduct_closeness_test()
-        print()
-        if passed:
-            print("Last 2 matrices are close so VALID adjustment")
-        else:
-            print("Last 2 matrices are not close so INVALID adjustment")
+        for k in range(num_samples):
+            if k == 1:
+                print("------------------------------")
+                self.bnet_maker.randomize_these_nodes(
+                    self.bnet_maker.hidden_nns)
+                self.calc_adj_prob_y_bar_x()
+            print(f"Random Bnet{self.bnet_maker.sample_num}:")
+            if verbose:
+                self.bnet_maker.print_CPTs()
+            self.bnet_maker.print_full_and_ampu_prob_y_bar_x()
+
+            print()
+            self.print_adj_full_and_ampu_prob_y_bar_x(verbose)
+            passed = self.conduct_closeness_test()
+            print()
+            if passed:
+                print("Last 2 matrices are close so VALID adjustment")
+            else:
+                print("Last 2 matrices are not close so INVALID adjustment")
 
 
     def conduct_closeness_test(self):

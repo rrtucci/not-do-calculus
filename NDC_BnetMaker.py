@@ -40,7 +40,8 @@ class NDC_BnetMaker:
     """
 
     def __init__(self,
-                 dot_file,
+                 nns,
+                 arrows,
                  hidden_nns,
                  nn_to_size=None,
                  other_cond=None,
@@ -54,26 +55,23 @@ class NDC_BnetMaker:
         nn_to_size: dict[str, int] | None
         other_cond: str | None
         """
-        self.dot_file = dot_file
+        self.nns = nns
+        self.arrows = arrows
         self.hidden_nns = hidden_nns
+        self.nn_to_size = self.fill_nn_to_size(nn_to_size)
         self.sample_num = 1
         if other_cond:
             assert isinstance(other_cond, str)
         self.other_cond = other_cond
         self.import_bnet = import_bnet
 
-        self.nns, self.arrows = None, None
-        self.nn_to_size = None
-        self.bnet = None
-        self.nn_to_nd = None
+        self.bnet, self.nn_to_nd = None, None
         self.ampu_pot = None
         self.full_pot = None
         self.ampu_prob_y_bar_x = None
         self.full_prob_y_bar_x = None
         if not import_bnet:
-            self.nns, self.arrows = DotTool.read_dot_file(dot_file)
-            self.nn_to_size = self.fill_nn_to_size(nn_to_size)
-            self.bnet = self.create_random_bnet()
+            self.bnet, self.nn_to_nd = self.create_random_bnet()
             self.calc_full_and_ampu_pots()
             self.calc_full_and_ampu_probs()
 
@@ -139,12 +137,12 @@ class NDC_BnetMaker:
             nd.size = self.nn_to_size[node_name]
             bnet_nodes.append(nd)
         bnet = BayesNet(set(bnet_nodes))
-        self.nn_to_nd = {name: bnet.get_node_named(name)
+        nn_to_nd = {name: bnet.get_node_named(name)
                          for name in self.nns}
 
         for arrow in self.arrows:
-            pa_nd = self.nn_to_nd[arrow[0]]
-            child_nd = self.nn_to_nd[arrow[1]]
+            pa_nd = nn_to_nd[arrow[0]]
+            child_nd = nn_to_nd[arrow[1]]
             child_nd.add_parent(pa_nd)
 
         # print("ccvv", bnet.nodes)
@@ -155,7 +153,7 @@ class NDC_BnetMaker:
             nd.potential.set_to_random()
             nd.potential.normalize_self()
         # print("aadf", bnet)
-        return bnet
+        return bnet, nn_to_nd
 
     def randomize_these_nodes(self,
                               some_node_names):
@@ -316,16 +314,3 @@ class NDC_BnetMaker:
         """
         print(self.bnet)
 
-    def draw(self, jupyter=True):
-        """
-
-        Parameters
-        ----------
-        jupyter: bool
-
-        Returns
-        -------
-        None
-
-        """
-        DotTool.draw(self.dot_file, jupyter=jupyter)
