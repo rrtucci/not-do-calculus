@@ -2,6 +2,7 @@ from NDC_Cases import *
 from NDC_BnetMaker import *
 from NDC_Tester import *
 
+
 class NDC_CaseTester(NDC_Tester):
     """
     Attributes
@@ -68,6 +69,7 @@ class NDC_CaseTester(NDC_Tester):
             self.adj_full_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
                 self.adj_case.adj_pot_method(self.bnet_maker.full_pot))
 
+
 if __name__ == "__main__":
     def main_backdoor(verbose):
         """
@@ -84,7 +86,7 @@ if __name__ == "__main__":
         nns, arrows = DotTool.read_dot_file(dot_file)
         bnet_maker = NDC_BnetMaker(nns,
                                    arrows,
-                                    hidden_nns=[])
+                                   hidden_nns=[])
         tester = NDC_CaseTester(bnet_maker, dot_file)
         tester.print_adj_report(verbose=verbose)
 
@@ -104,8 +106,8 @@ if __name__ == "__main__":
         dot_file = "dot_atlas/front-door.dot"
         nns, arrows = DotTool.read_dot_file(dot_file)
         bnet_maker = NDC_BnetMaker(nns,
-                                    arrows,
-                                    hidden_nns=["h"])
+                                   arrows,
+                                   hidden_nns=["h"])
 
         tester = NDC_CaseTester(bnet_maker, dot_file)
         tester.print_adj_report(verbose=verbose)
@@ -128,13 +130,13 @@ if __name__ == "__main__":
         if adj_version == 4:
             bnet_maker = NDC_BnetMaker(nns,
                                        arrows,
-                                        hidden_nns=["u_1", "u_2"],
-                                        other_cond="z",
-                                        nn_to_size={"z": 3})
+                                       hidden_nns=["u_1", "u_2"],
+                                       other_cond="z",
+                                       nn_to_size={"z": 3})
         else:
             bnet_maker = NDC_BnetMaker(nns,
-                                        arrows,
-                                        hidden_nns=["u_1", "u_2"])
+                                       arrows,
+                                       hidden_nns=["u_1", "u_2"])
         tester = NDC_CaseTester(bnet_maker, dot_file, adj_version=adj_version)
         tester.print_adj_report(verbose=verbose)
 

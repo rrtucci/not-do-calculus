@@ -84,6 +84,7 @@ class NDC_Searcher:
                 tester.print_adj_report(False)
             else:
                 if verbose:
+                    print("===================")
                     print(f"{self.bnet_maker.hidden_nns}>{subs}"
                           f" is a NON-VIABLE substitution")
 
@@ -93,7 +94,6 @@ if __name__ == "__main__":
         """
         Parameters
         ----------
-        draw: bool
         verbose: bool
 
         Returns
@@ -131,5 +131,26 @@ if __name__ == "__main__":
         searcher.conduct_search(verbose=verbose)
 
 
-    # main_backdoor(False, False)
-    main_frontdoor(False, False)
+    def main_napkin(verbose):
+        """
+        Parameters
+        ----------
+        verbose: bool
+
+        Returns
+        -------
+        None
+,
+        """
+        dot_file = "dot_atlas/napkin.dot"
+        nns, arrows = DotTool.read_dot_file(dot_file)
+        bnet_maker = NDC_BnetMaker(nns,
+                                   arrows,
+                                   hidden_nns=["u_1", "u_2"])
+        searcher = NDC_Searcher(bnet_maker)
+        searcher.conduct_search(verbose=verbose)
+
+
+    # main_backdoor(False)
+    # main_frontdoor(False)
+    main_napkin(True)

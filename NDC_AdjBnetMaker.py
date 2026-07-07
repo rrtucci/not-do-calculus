@@ -39,7 +39,7 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
     @staticmethod
     def bnet_has_x_parent_that_is_hidden(arrows, hidden_nns):
         for arrow in arrows:
-            if arrow[0] == "x" and arrow[1] in hidden_nns:
+            if arrow[1] == "x" and arrow[0] in hidden_nns:
                 return True
         return False
     
@@ -48,10 +48,10 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
         if not NDC_AdjBnetMaker.\
                 bnet_has_x_parent_that_is_hidden(self.arrows, 
                                                  self.hidden_nns):
-            bnet = self.bnet_maker.bnet
-            nn_to_nd = {name: self.bnet.get_node_named(name)
+            new_bnet = self.bnet_maker.bnet
+            nn_to_new_nd = {name: new_bnet.get_node_named(name)
                              for name in self.nns}
-            return bnet, nn_to_nd
+            return new_bnet, nn_to_new_nd
 
         for h_name in self.hidden_nns:
             self.nn_to_size[h_name]= \
@@ -62,37 +62,45 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
             nd = BayesNode(k, name=node_name)
             nd.size = self.nn_to_size[node_name]
             bnet_nodes.append(nd)
-        bnet = BayesNet(set(bnet_nodes))
-        self.nn_to_nd = {name: bnet.get_node_named(name)
+        new_bnet = BayesNet(set(bnet_nodes))
+        nn_to_new_nd = {name: new_bnet.get_node_named(name)
                          for name in self.nns}
 
         for arrow in self.arrows:
-            pa_nd = self.nn_to_nd[arrow[0]]
-            child_nd = self.nn_to_nd[arrow[1]]
+            pa_nd = nn_to_new_nd[arrow[0]]
+            child_nd = nn_to_new_nd[arrow[1]]
             child_nd.add_parent(pa_nd)
             
 
-        nd_to_self_nd = {}
+        nd_to_new_nd = {}
         for nn, nd in self.bnet_maker.nn_to_nd.items():
-            nd_to_self_nd[nd] = self.nn_to_nd[nn]
+            nd_to_new_nd[nd] = nn_to_new_nd[nn]
         
-        for nd, self_nd in nd_to_self_nd.items():
-            self_ord_nodes = [nd_to_self_nd[nd] for
+        for nd, new_nd in nd_to_new_nd.items():
+            # print("kloi", "new node================")
+            ord_new_nodes = [nd_to_new_nd[nd] for
                              nd in nd.potential.ord_nodes]
-            # print("llkjh", ord_nodes)
-            self_nd.potential = DiscreteCondPot(False, 
-                                               self_ord_nodes)
+            new_nd.potential = DiscreteCondPot(False,
+                                               ord_new_nodes)
             ord_nns = [nd.name for nd in nd.potential.ord_nodes]
             sub_ord_nns = [self.nn_to_sub[nn] for nn in ord_nns]
 
             len_list = len(sub_ord_nns)
             len_set = len(set(sub_ord_nns))
             if len_list == len_set:
-                num_pot = self.bnet_maker.full_pot.get_self_marginal(
-                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns])
-                denom_pot = num_pot.get_self_marginal(
-                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns[:-1]])
-                self_nd.potential.pot_arr = (num_pot/denom_pot).pot_arr
+                # print("vvbn", "==, sub_ord_nns", sub_ord_nns)
+                sub_ord_nds =\
+                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns]
+                numer_pot = self.bnet_maker.full_pot.get_new_marginal(
+                    sub_ord_nds)
+                denom_pot = numer_pot.get_new_marginal(sub_ord_nds[:-1])
+                final_pot = numer_pot/denom_pot
+                # print("mnbn final pot", final_pot)
+                final_pot.set_to_transpose(sub_ord_nds)
+                # print("mnbn final pot", final_pot)
+                new_nd.potential.pot_arr = final_pot.pot_arr
+                # new_nd.potential.normalize_self()
+                # print("mcvth", new_nd.potential)
             else:
                 assert len_list == len_set + 1
                 colon_list = []
@@ -102,20 +110,29 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
                         colon_list.append(slice(None))
                     else:
                         colon_list.append(None)
+                # print("ccvb", colon_list)
+                # print("vvbn", "!=, k0, sub_ord_nns", k0, sub_ord_nns)
                 size_list = [self.bnet_maker.nn_to_size[nn] for nn in
                              sub_ord_nns]
                 # this removes first occurrence of sub_ord_nns[-1]
                 # second occurrence at the end of list is kept
                 xx = sub_ord_nns.pop(k0)
                 assert xx ==  sub_ord_nns[-1]
-                num_pot = self.bnet_maker.full_pot.get_self_marginal(
-                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns])
-                denom_pot = num_pot.get_self_marginal(
-                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns[:-1]])
-                small_pot_arr = (num_pot/denom_pot).pot_arr
-                self_nd.potential.pot_arr = \
-                    broadcast_to(small_pot_arr[colon_list],
-                                    tuple(size_list))
-            # nd.potential.normalize_self()
-        return bnet
+                sub_ord_nds =\
+                    [self.bnet_maker.nn_to_nd[nn] for nn in sub_ord_nns]
+
+                numer_pot = self.bnet_maker.full_pot.get_new_marginal(
+                    sub_ord_nds)
+                denom_pot = numer_pot.get_new_marginal(
+                    sub_ord_nds[:-1])
+                small_pot = numer_pot/denom_pot
+                small_pot.set_to_transpose(sub_ord_nds)
+                new_nd.potential.pot_arr = \
+                    (broadcast_to(small_pot.pot_arr[tuple(colon_list)],
+                                    tuple(size_list))).copy()
+                # print("mvbh", new_nd.potential)
+                # new_nd.potential.normalize_self()
+        # print("mdrf new_bnet\n\n", new_bnet)
+        # print("xcvt old bnet\n\n", self.bnet_maker.bnet)
+        return new_bnet, nn_to_new_nd
         

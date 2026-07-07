@@ -12,10 +12,13 @@ class NDC_SearchTester(NDC_Tester):
         adj_bnet_maker: NDC_AdjBnetMaker
         """
         NDC_Tester.__init__(self, bnet_maker)
-        self.adj_ampu_prob_y_bar_x = adj_bnet_maker.ampu_prob_y_bar_x
-        self.adj_full_prob_y_bar_x = adj_bnet_maker.full_prob_y_bar_x
+        self.adj_bnet_maker = adj_bnet_maker
+        self.calc_adj_prob_y_bar_x()
 
 
     def calc_adj_prob_y_bar_x(self):
-        return
+        self.adj_ampu_prob_y_bar_x = self.adj_bnet_maker.ampu_prob_y_bar_x
+        # this is crucial: the full and ampu adj prob are the same
+        # because the bnet should be amputated to begin with
+        self.adj_full_prob_y_bar_x = self.adj_bnet_maker.ampu_prob_y_bar_x
 
