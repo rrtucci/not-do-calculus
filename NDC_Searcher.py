@@ -1,10 +1,15 @@
 from itertools import chain
+
+
 def flatten(partition):
     return list(chain.from_iterable(partition))
+
+
 from itertools import product
 from NDC_BnetMaker import *
 from NDC_AdjBnetMaker import *
 from NDC_SearchTester import *
+
 
 class NDC_Searcher:
     """
@@ -33,18 +38,17 @@ class NDC_Searcher:
         return nn_to_parents
 
     @staticmethod
-    def substitution_is_viable(nn_to_parents, nn_to_sub):
-        viable= True
+    def substitution_is_plausible(nn_to_parents, nn_to_sub):
+        plausible = True
         for nn, parents in nn_to_parents.items():
             sub_parents = [nn_to_sub[nn] for nn in parents]
             # print("czvb, nn, parents, sub_parents", nn, parents, sub_parents)
             if len(sub_parents) != len(set(sub_parents)):
-                viable = False
+                plausible = False
                 break
-        # print("xxcv", "viable", viable)
+        # print("xxcv", "plausible", plausible)
         # print()
-        return viable
-
+        return plausible
 
     def conduct_search(self, verbose):
         """
@@ -71,14 +75,14 @@ class NDC_Searcher:
                 subs
             )
 
-            viable_subs =NDC_Searcher.substitution_is_viable(
+            plausible_subs = NDC_Searcher.substitution_is_plausible(
                 nn_to_parents, nn_to_sub)
-            if viable_subs:
+            if plausible_subs:
                 print("===================")
                 print(f"{self.bnet_maker.hidden_nns}>{subs}"
-                      f" is a VIABLE substitution")
+                      f" is a PLAUSIBLE substitution")
                 self.adj_bnet_maker = NDC_AdjBnetMaker(self.bnet_maker,
-                                             subs)
+                                                       subs)
                 tester = NDC_SearchTester(self.bnet_maker,
                                           self.adj_bnet_maker)
                 tester.print_adj_report(False)
@@ -86,7 +90,7 @@ class NDC_Searcher:
                 if verbose:
                     print("===================")
                     print(f"{self.bnet_maker.hidden_nns}>{subs}"
-                          f" is a NON-VIABLE substitution")
+                          f" is a NON-PLAUSIBLE substitution")
 
 
 if __name__ == "__main__":
@@ -105,7 +109,7 @@ if __name__ == "__main__":
         nns, arrows = DotTool.read_dot_file(dot_file)
         bnet_maker = NDC_BnetMaker(nns,
                                    arrows,
-                                    hidden_nns=[])
+                                   hidden_nns=[])
         searcher = NDC_Searcher(bnet_maker)
         searcher.conduct_search(verbose=verbose)
 
@@ -126,7 +130,7 @@ if __name__ == "__main__":
         nns, arrows = DotTool.read_dot_file(dot_file)
         bnet_maker = NDC_BnetMaker(nns,
                                    arrows,
-                                    hidden_nns=["h"])
+                                   hidden_nns=["h"])
         searcher = NDC_Searcher(bnet_maker)
         searcher.conduct_search(verbose=verbose)
 
