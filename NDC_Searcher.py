@@ -155,6 +155,6 @@ if __name__ == "__main__":
         searcher.conduct_search(verbose=verbose)
 
 
-    # main_backdoor(False)
-    # main_frontdoor(False)
+    # main_backdoor(True)
+    # main_frontdoor(True)
     main_napkin(True)
