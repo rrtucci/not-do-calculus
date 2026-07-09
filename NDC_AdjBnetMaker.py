@@ -73,7 +73,7 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
         Parameters
         ----------
         nns: list[str]
-            list of all all node names
+            list of all node names
         hidden_nns: list[str]
             list of hidden node names
         subs: list[str]
