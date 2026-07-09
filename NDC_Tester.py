@@ -1,31 +1,74 @@
 from NDC_BnetMaker import *
 
+
 class NDC_Tester:
+    """
+    This class is an abstract class because its method
+    calc_adj_prob_y_bar_x() is abstract; i.e., must be overridden by
+    subclasses. The classes NDC_CaseTester and NDC_SearchTester are
+    subclasses of this class. The purpose of this class is to test
+    adjustment formulae (AF). The AF is said to be valid if the numpy arrays
+
+    adj_ampu_prob_y_bar_x
+
+    and
+
+    adj_full_prob_y_bar_x
+
+    are close (the same to a high precision)
+
+
+    Attributes
+    ----------
+    adj_ampu_prob_y_bar_x: np.array
+        the probability P(y|x) for the AF under consideration,
+        calculated from the amputated self.bnet_maker.bnet
+    adj_full_prob_y_bar_x: np.array
+        the probability P(y|x) for the AF under consideration,
+        calculated from the amputated self.bnet_maker.bnet
+    bnet_maker: NDC_BnetMaker
+        bnet_maker.bnet is used to calculate the adjustment pot via the
+        abstract method calc_adj_prob_y_bar_x()
+    """
+
     def __init__(self,
                  bnet_maker,
-                 re_randomize_hidden_nds=False,
-                 null_adj=False):
+                 re_randomize_hidden_nds=False):
         """
 
         Parameters
         ----------
         bnet_maker: NDC_BnetMaker
-        adj_version: int
-            the adjustment formula version. For the Napkin OP, there are
-            currently 4 adjustment formulae that are tested
-        null_adj: bool
+        re_randomize_hidden_nds: bool
+            This bool is True iff we consider 2 bnets instead of one.
+            The second bnet differs from the first in that the CTPs for the
+            hidden nodes are randomized.
         """
         self.bnet_maker = bnet_maker
-        self.re_randomize_hidden_nds  = re_randomize_hidden_nds
-        self.null_adj = null_adj
+        self.re_randomize_hidden_nds = re_randomize_hidden_nds
         self.adj_ampu_prob_y_bar_x = None
         self.adj_full_prob_y_bar_x = None
 
     def calc_adj_prob_y_bar_x(self):
+        """
+        abstract method
+
+        Returns
+        -------
+        None
+
+        """
         assert False
 
     def print_adj_full_and_ampu_prob_y_bar_x(self, verbose):
         """
+        If other_cond=None, this method prints two numpy arrays:
+
+        adjusted P(y|x) from full_pot
+
+        adjusted P(y|x) from ampu_pot
+
+        If other_cond= "z", it prints P(y|x,z) instead of P(y|x)
 
         Returns
         -------
@@ -60,29 +103,25 @@ class NDC_Tester:
     def print_adj_report(self,
                          verbose=False):
         """
-        This method and the analogous one `print_all_prob_y_bar_x_z` are the
-        only ones used in the jupyter notebooks. All others are meant to be
-        internal. This method prints 4 things for each bnet.
-        `num_bnet_makers=2` means the default is two bnets, but it will do only
-        one bnet if you input `num_bnet_makers=1`
+        This method prints the following 4 things for each bnet.
+        re_randomize_hidden_nds = True means the default is two bnets.
+        Otherwise, it will do just one.
 
         1. full P(y|x) for OP
 
-        2. amputated P(y|x) for OP. Calculating this in real life requires data
-        from an RCT.
+        2. amputated P(y|x) for OP. This probability is what a CPT yields
 
         3. adjusted P(y|x) from full_pot
 
-        4. adjusted P(y|x) from ampu_pot. Calculating this in real life requires
-        data from an RCT.
+        4. adjusted P(y|x) from ampu_pot.
 
 
 
         Parameters
         ----------
         verbose: bool
-            if this is set to True, the method prints also the CPT of each node
-            of the bnet.
+            if this is set to True, the method prints also the CPT of each
+            node of the bnet.
 
         Returns
         -------
@@ -113,10 +152,17 @@ class NDC_Tester:
             else:
                 print("Last 2 matrices are not close so INVALID adjustment")
 
-
     def conduct_closeness_test(self):
         """
-        verbose: bool
+        This method returns True iff the numpy arrays
+
+        self.adj_full_prob_y_bar_x
+
+        and
+
+        self.bnet_maker.ampu_prob_y_bar_x
+
+        are close (the same to a high precision)
 
         Returns
         -------
@@ -124,5 +170,5 @@ class NDC_Tester:
 
         """
         passed_test = np.allclose(self.adj_full_prob_y_bar_x,
-                           self.bnet_maker.ampu_prob_y_bar_x)
+                                  self.bnet_maker.ampu_prob_y_bar_x)
         return passed_test

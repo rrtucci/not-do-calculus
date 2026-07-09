@@ -5,14 +5,19 @@ from NDC_Tester import *
 
 class NDC_CaseTester(NDC_Tester):
     """
+    This class is a subclass of the abstract class NDC_Tester. It overrides
+    the method calc_adj_prob_y_bar_x(). This class creates and uses within
+    method calc_adj_prob_y_bar_x(), an object of class NDC_Cases.
+
     Attributes
     ----------
-
     adj_ampu_prob_y_bar_x: np.array
+        P(y|x) for adjustment, calculated from the amputated bnet
     adj_case: NDC_Cases
+        an object of NCD_Cases
     adj_full_prob_y_bar_x: np.array
-    bnet_maker: NDC_BnetMaker
-    null_adj: bool
+        P(y|x) for adjustment, calculated from the full bnet
+
 
     """
 
@@ -20,27 +25,36 @@ class NDC_CaseTester(NDC_Tester):
                  bnet_maker,
                  dot_file,
                  re_randomize_hidden_nds=True,
-                 adj_version=1,
-                 null_adj=False):
+                 adj_version=1):
         """
 
         Parameters
         ----------
         bnet_maker: NDC_BnetMaker
+        dot_file: str
+        re_randomize_hidden_nds: bool
         adj_version: int
-            the adjustment formula version. For the Napkin OP, there are
-            currently 4 adjustment formulae that are tested
-        null_adj: bool
+            the adjustment formula version. For the Napkin bnet, there are
+            several.
+
         """
         NDC_Tester.__init__(self,
                             bnet_maker,
-                            re_randomize_hidden_nds,
-                            null_adj)
+                            re_randomize_hidden_nds)
+        """
+        Constructor
+        
+        Parameters
+        ----------
+        bnet_maker: NDC_BnetMaker
+        re_randomize_hidden_nds: bool
+        
+        """
         # self.bnet_maker = bnet_maker
         # self.re_randomize_hidden_nds =  re_randomize_hidden_nds
-        # self.null_adj = null_adj
         # self.adj_ampu_prob_y_bar_x = None
         # self.adj_full_prob_y_bar_x = None
+
         self.adj_case = NDC_Cases(bnet_maker.nn_to_nd,
                                   dot_file,
                                   adj_version)
@@ -48,26 +62,18 @@ class NDC_CaseTester(NDC_Tester):
 
     def calc_adj_prob_y_bar_x(self):
         """
-
-        Parameters
-        ----------
-        adj_pot_method: Function | None
+        This method calculates P(y|x) for the AF, from either in_pot= full_pot
+        or ampu_pot. It does this using  self.adj_case.adj_pot_method()
 
         Returns
         -------
         None
 
         """
-        if self.null_adj:
-            self.adj_ampu_prob_y_bar_x = \
-                self.bnet_maker.ampu_prob_y_bar_x
-            self.adj_full_prob_y_bar_x = \
-                self.bnet_maker.full_prob_y_bar_x
-        else:
-            self.adj_ampu_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
-                self.adj_case.adj_pot_method(self.bnet_maker.ampu_pot))
-            self.adj_full_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
-                self.adj_case.adj_pot_method(self.bnet_maker.full_pot))
+        self.adj_ampu_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
+            self.adj_case.adj_pot_method(self.bnet_maker.ampu_pot))
+        self.adj_full_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
+            self.adj_case.adj_pot_method(self.bnet_maker.full_pot))
 
 
 if __name__ == "__main__":
@@ -95,7 +101,6 @@ if __name__ == "__main__":
         """
         Parameters
         ----------
-        draw: bool
         verbose: bool
 
         Returns

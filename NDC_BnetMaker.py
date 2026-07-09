@@ -6,36 +6,55 @@ from DotTool import *
 
 class NDC_BnetMaker:
     """
+    Important: we use `nn` to stand for a node name (str) and 'nd' or 'node`
+    to stand for a BayesNode
+
+    NDC = Not Do Calculus
+
+    The purpose of this class is to create a BayesNet object from `nns` and
+    `arrows`. The later are read from a dot file
+    using
+
+    nns, arrows = DotTool.read_dot_file(dot_file)
+
+
     Attributes
     ----------
     ampu_pot: Potential
+        amputated potential for bnet
     ampu_prob_y_bar_x: np.array
+        P(y|x) numpy array calculated from ampu_pot
     arrows: list[tuple[str, str]]
             example: [('a', 'b'), ('a', 'c')], where ('a', 'b') means a->b
     bnet: BayesNet
-        BayesNet object created by `create_random_bnet`. BayesNet or bnet
+        BayesNet object created by `create_random_bnet()`. BayesNet or bnet
         stand for Bayesian network.
-    dot_file: str
-        dot file (i.e., graphviz format) of the OP (Original Promise) bnet.
-
     full_pot: Potential
+        full potential for bnet. A.K.A. OP (Original Promise)
     full_prob_y_bar_x: np.array
+        P(y|x) numpy array calculated from full_pot
     hidden_nns: list[str]
-        names of hidden nodes
+        list on nns (node names) of hidden nodes
+    import_bnet: bool
+        if import_bnet == True, `bnet` is constructed by this method. If
+        import_bnet == False, `bnet` is built externally and passed in to
+        this method.
     nn_to_nd: dict[str, BayesNode]
-    nns: list[str]
-        example: ['a', 'b', 'c']
+        dict mapping every node name to its corresponding BayesNode
     nn_to_size: dict[str, int] | None
-        dict mapping each node name to its size. This input need only be a
-        partial list of those nodes that you don't want to have default
-        values. dictionary mapping node name to its size (i.e., the number
-        of values or states). In this method, `nn_to_size` must contain all
-        the nodes. In all other methods in this file (for example,
-        in `fill_node_to_size( )`), `nn_to_size` contains only special nodes
-        which you don't want to have a default size. Default sizes are 2 for
-        non-hidden nodes and 3 for hidden ones.
+        dict mapping each node name (nn) to its size. This input need only
+        be a partial list of those nodes that you don't want to have default
+        sizes. Default sizes are 2 for non-hidden nodes and 3 for hidden
+        ones. For the method `fill_node_to_size( )`, the input `nn_to_size`
+        takes as input a partial nn_to_size and returns a complete one.
+    nns: list[str]
+        list of all the node names example.
     other_cond: str | None
+        If we are only consdering P(y|do(x)), this string should be empty.
+        If we want to consider P(y|do(x), z), the other_cond= "z"
     sample_num: int
+     sample number. this number starts at 1 and after re-randomizing the bnet,
+     it becomes 2.
 
     """
 
@@ -47,13 +66,16 @@ class NDC_BnetMaker:
                  other_cond=None,
                  import_bnet=False):
         """
+        Constructor
 
         Parameters
         ----------
-        dot_file: str
+        nns: list[str]
+        arrows: list[tuple[str, str]]
         hidden_nns: list[str]
         nn_to_size: dict[str, int] | None
         other_cond: str | None
+        import_bnet: bool
         """
         self.nns = nns
         self.arrows = arrows
@@ -75,14 +97,13 @@ class NDC_BnetMaker:
             self.calc_full_and_ampu_pots()
             self.calc_full_and_ampu_probs()
 
-
     def fill_nn_to_size(self, nn_to_size):
         """
         This method compiles the list of node names from the dot file
         `dot_file`. It then produces a default dict `nn_to_size1` that maps
-        hidden nodes to 3 (i.e., they will have 3 states) and non-hidden ones to
-        2. Then the method overrides `nn_to_size1` with the request of
-        `nn_to_size` whenever they disagree. Finally, the method returns
+        hidden nodes to 3 (i.e., they will have 3 states) and non-hidden
+        ones to 2. Then the method overrides `nn_to_size1` with the request
+        of `nn_to_size` whenever they disagree. Finally, the method returns
         `nn_to_size1`
 
         Parameters
@@ -116,9 +137,13 @@ class NDC_BnetMaker:
         with the only other constraint being that the number of states of each
         node be as specified by the input 'nn_to_size'.
 
+        Besides a BayesNet object, this method returns a dict `nn_to_nd` (
+        map of node name to BayesNode) which is very useful and easy to
+        create from a BayesNet
+
         Returns
         -------
-        BayesNet
+        BayesNet, list[str, BayesNode]
 
         """
         found_x = False
@@ -138,7 +163,7 @@ class NDC_BnetMaker:
             bnet_nodes.append(nd)
         bnet = BayesNet(set(bnet_nodes))
         nn_to_nd = {name: bnet.get_node_named(name)
-                         for name in self.nns}
+                    for name in self.nns}
 
         for arrow in self.arrows:
             pa_nd = nn_to_nd[arrow[0]]
@@ -159,14 +184,14 @@ class NDC_BnetMaker:
                               some_node_names):
         """
         This method randomizes (i.e., replaces by random ones) the CPT (
-        Conditional Probability Tables) of the nodes in the list
-        `some_node_names` in the BayesNet object bnet.
+        Conditional Probability Tables) of nodes in the list
+        `some_node_names` in the BayesNet object `bnet`.
 
         Parameters
         ----------
         some_node_names: list[str]
             This is a partial list of node names. Normally one uses for this a
-            list of nodes that are hidden.
+            list of the nodes that are hidden.
 
         Returns
         -------
@@ -183,19 +208,18 @@ class NDC_BnetMaker:
 
     def calc_full_and_ampu_pots(self):
         """
-        This method calculates the probability distribution for
+        This method calculates two potentials
 
-        (1) the "full" OP and
+        (1) `full_pot` forb "full" bnet
 
-        (2) the "ampu" OP. By (ampu=amputated) OP, we mean a bnet whose
-        arrows entering node "x" are amputated.
+        (2) `ampu_pot` for the "ampu" (amputated) bnet. By amputated bnet,
+        we mean a bnet whose arrows entering node "x" are amputated.
 
-        These two probability distributions are outputted as 2 Potential
-        objects, `full_pot` and `dot_pot`. Remember, a Potential can be thought
-        of an arbitrary function f(x,y,z) where `x,y,z` are a partial list of
-        the nodes of the OP bnet. A Potential is usually used to carry either a
-        joint probability distribution like P(x,y,z) or a conditional one like
-        P(z| x, y).
+         Remember, a Potential can be thought of an arbitrary function f(x,
+         y,z, ...) where `x,y,z, ...` are a partial list of the nodes of the
+         bnet. A Potential is usually used to carry either a joint
+         probability distribution like P(x,y, z, ...) or a conditional one
+         like P(y| x, z, ...).
 
         Returns
         -------
@@ -217,6 +241,14 @@ class NDC_BnetMaker:
 
     def calc_full_and_ampu_probs(self):
         """
+        This method must follow the method `calc_full_and_ampu_probs()`.
+        It calculates
+
+        self.full_prob_y_bar_x from self.full_pot
+
+        and
+
+        self.ampu_prob_y_bar_x from self.ampu_pot
 
         Returns
         -------
@@ -228,17 +260,12 @@ class NDC_BnetMaker:
 
     def get_prob_y_bar_x(self, in_pot):
         """
-        This method takes the two Potentials `ampu_pot` and `full_pot` and
-        calculates from these the two conditional probabilities
-        `ampu_prob_y_bar_x`, `full_prob_y_bar_x'. The probabilities are of the
-        type P(y|x) and expressed as numpy arrays. `ampu_prob_y_bar_x` equals P(
-        y|do(x)).
+        This method takes as input a potential `in_pot` and returns a
+        probability of the type P(y|x) expressed as a numpy array. It's used
+        with in_pot == ampu_pot and in_pot == full_pot. `ampu_prob_y_bar_x`
+        equals P( y|do(x)).
 
-                The analogous method `calc_ampu_and_full_prob_y_bar_x` calculates P(
-        y|x). This method calculates P(y| x, z) instead. If you don't want
-        the name of the extra node to be "conditioned on" to default to 'z',
-        you can tell the method the name of your alternative to "z" using
-        the input variable `other_cond`
+        If other_cond = "z",
 
         Parameters
         ----------
@@ -277,6 +304,10 @@ class NDC_BnetMaker:
 
     def print_full_and_ampu_prob_y_bar_x(self):
         """
+        This method prints the numpy arrays self.full_prob_y_bar_x and
+        self.ampu_prob_y_bar_x. If other_cond = None, these numpy arrays
+        contain probabilities P(y|x). If other_cond = 'z', these numpy array
+        contain probabilities P(y|x, z).
 
         Returns
         -------
@@ -306,6 +337,8 @@ class NDC_BnetMaker:
 
     def print_CPTs(self):
         """
+        This method prints all the CPTs (conditional probability tables)
+        a.k.a. TPMs (transition probability matrices) of self.bnet
 
         Returns
         -------
@@ -313,4 +346,3 @@ class NDC_BnetMaker:
 
         """
         print(self.bnet)
-

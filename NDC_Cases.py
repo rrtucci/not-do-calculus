@@ -1,15 +1,4 @@
 """
-All the methods in this file return a conditional probability P(y|x) or P(
-y|x, z) dictated by an adjustment formula (AF).
-
-The AFs considered are
-
-1. backdoor AF
-2. frontdoor AF
-3. Napkin1 AF
-4. Napkin2 AF (fails to reproduce P(y|do(x))
-5. Napkin3 AF (fails to reproduce P(y|do(x))
-6. Napkin4 AF (fails to reproduce P(y|do(x))
 
 1 to 5 return a P(y|x). 6 returns a P(y|x, z)
 
@@ -19,30 +8,47 @@ The AFs considered are
 
 class NDC_Cases:
     """
+    This class is a collection of different adjustment formulae (AF) for thr
+    bnets backdoor, frontdoor and napkin so far. When there are more than
+    one AF for a bnet (e.g., napkin) the various AF are given an adjustment
+    version adj_version. For each AF, there is a method in this class that
+    returns a full pot. That full pot method is called by NDC_CaseTester.
+
+
     Attributes
     ----------
     adj_pot_method: Function
+        method that returns a full pot. This method has several
+        adj_pot_method. For example, adj_pot_method = get_backdoor_adj_pot
     adj_version: int
+        adjustment version. This int is used to distinguish between several
+        AF for the same bnet. For example, napkin has several AF
     dot_file: str
+        dot file (i.e., graphviz format) of the OP (Original Promise) bnet.
     has_other_cond: bool
-    name_to_nd: dict[str, BayesNode]
+        whether there is another condition. If there isn't we are
+        calculating P(y|x). If there is and other_cond = 'z', we are
+        calculating P(y|x, z).  has_other_cond = True for napkin adj_version=4
+    nn_to_nd: dict[str, BayesNode]
+        dict mapping a node name (nn) to its nd (BayesNode)
 
 
     """
 
     def __init__(self,
-                 name_to_nd,
+                 nn_to_nd,
                  dot_file,
                  adj_version):
         """
+        Constructor
 
         Parameters
         ----------
-        name_to_nd: dict[str, BayesNode]
+        nn_to_nd: dict[str, BayesNode]
         dot_file: str
         adj_version: int
         """
-        self.name_to_nd = name_to_nd
+        self.nn_to_nd = nn_to_nd
         self.dot_file = dot_file
         self.adj_version = adj_version
         self.adj_pot_method = None
@@ -51,6 +57,9 @@ class NDC_Cases:
 
     def set_adj_pot_method(self):
         """
+        This method decides from self.doc_file and self. adj_version,
+        what should be the self.adj_pot_method and returns the latter.
+        It also sets self.has_other_cond
 
         Returns
         -------
@@ -84,6 +93,9 @@ class NDC_Cases:
 
     def get_backdoor_adj_pot(self, in_pot):
         """
+        This method takes as input a pot `in_pot` (which is either a
+        `full_pot` or an `ampu_pot`) for the BACK-DOOR bnet. It returns an
+        adjustment pot.
     
         Parameters
         ----------
@@ -93,8 +105,8 @@ class NDC_Cases:
         -------
         Potential
         """
-        nd_z = self.name_to_nd['z']
-        nd_x = self.name_to_nd['x']
+        nd_z = self.nn_to_nd['z']
+        nd_x = self.nn_to_nd['x']
 
         pot_xz = in_pot.get_new_marginal([nd_x, nd_z])
         pot_z = in_pot.get_new_marginal([nd_z])
@@ -103,6 +115,9 @@ class NDC_Cases:
 
     def get_frontdoor_adj_pot(self, in_pot):
         """
+        This method takes as input a pot `in_pot` (which is either a
+        `full_pot` or an `ampu_pot`) for the FRONT-DOOR bnet. It returns an
+        adjustment pot.
 
         Parameters
         ----------
@@ -113,9 +128,9 @@ class NDC_Cases:
         Potential
         """
         # nd_h = self.nn_to_nd['h']
-        nd_m = self.name_to_nd['m']
-        nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
+        nd_m = self.nn_to_nd['m']
+        nd_x = self.nn_to_nd['x']
+        nd_y = self.nn_to_nd['y']
         pot_mxy = in_pot.get_new_marginal([nd_m, nd_x, nd_y])
         pot_mx = in_pot.get_new_marginal([nd_m, nd_x])
         pot_x = pot_mx.get_new_marginal([nd_x])
@@ -126,6 +141,9 @@ class NDC_Cases:
 
     def get_napkin1_adj_pot(self, in_pot):
         """
+        This method takes as input a pot `in_pot` (which is either a
+        `full_pot` or an `ampu_pot`) for the NAPKIN bnet. It returns an
+        adjustment pot (adj_version=1).
 
         Parameters
         ----------
@@ -135,10 +153,10 @@ class NDC_Cases:
         -------
         Potential
         """
-        nd_w = self.name_to_nd['w']
-        nd_z = self.name_to_nd['z']
-        nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
+        nd_w = self.nn_to_nd['w']
+        nd_z = self.nn_to_nd['z']
+        nd_x = self.nn_to_nd['x']
+        nd_y = self.nn_to_nd['y']
 
         pot_wzxy = in_pot.get_new_marginal([nd_w, nd_z, nd_x, nd_y])
         pot_wz = pot_wzxy.get_new_marginal([nd_w, nd_z])
@@ -150,6 +168,9 @@ class NDC_Cases:
 
     def get_napkin2_adj_pot(self, in_pot):
         """
+        This method takes as input a pot `in_pot` (which is either a
+        `full_pot` or an `ampu_pot`) for the NAPKIN bnet. It returns an
+        adjustment pot (adj_version=2).
 
         Parameters
         ----------
@@ -159,9 +180,9 @@ class NDC_Cases:
         -------
         Potential
         """
-        nd_z = self.name_to_nd['z']
-        nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
+        nd_z = self.nn_to_nd['z']
+        nd_x = self.nn_to_nd['x']
+        nd_y = self.nn_to_nd['y']
 
         pot_zxy = in_pot.get_new_marginal([nd_z, nd_x, nd_y])
         pot_zx = pot_zxy.get_new_marginal([nd_z, nd_x])
@@ -172,6 +193,9 @@ class NDC_Cases:
 
     def get_napkin3_adj_pot(self, in_pot):
         """
+        This method takes as input a pot `in_pot` (which is either a
+        `full_pot` or an `ampu_pot`) for the NAPKIN bnet. It returns an
+        adjustment pot (adj_version=3).
 
         Parameters
         ----------
@@ -181,9 +205,9 @@ class NDC_Cases:
         -------
         Potential
         """
-        nd_w = self.name_to_nd['w']
-        nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
+        nd_w = self.nn_to_nd['w']
+        nd_x = self.nn_to_nd['x']
+        nd_y = self.nn_to_nd['y']
 
         pot_wxy = in_pot.get_new_marginal([nd_w, nd_x, nd_y])
         pot_wx = pot_wxy.get_new_marginal([nd_w, nd_x])
@@ -194,6 +218,9 @@ class NDC_Cases:
 
     def get_napkin4_adj_pot(self, in_pot):
         """
+        This method takes as input a pot `in_pot` (which is either a
+        `full_pot` or an `ampu_pot`) for the NAPKIN bnet. It returns an
+        adjustment pot (adj_version=4).
 
         Parameters
         ----------
@@ -203,10 +230,10 @@ class NDC_Cases:
         -------
         Potential
         """
-        nd_w = self.name_to_nd['w']
-        nd_z = self.name_to_nd['z']
-        nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
+        nd_w = self.nn_to_nd['w']
+        nd_z = self.nn_to_nd['z']
+        nd_x = self.nn_to_nd['x']
+        nd_y = self.nn_to_nd['y']
 
         pot_wzxy = in_pot.get_new_marginal([nd_w, nd_z, nd_x, nd_y])
         pot_wz = pot_wzxy.get_new_marginal([nd_w, nd_z])
@@ -218,6 +245,9 @@ class NDC_Cases:
 
     def get_napkin5_adj_pot(self, in_pot):
         """
+        This method takes as input a pot `in_pot` (which is either a
+        `full_pot` or an `ampu_pot`) for the NAPKIN bnet. It returns an
+        adjustment pot (adj_version=5).
 
         Parameters
         ----------
@@ -227,14 +257,13 @@ class NDC_Cases:
         -------
         Potential
         """
-        nd_w = self.name_to_nd['w']
-        nd_x = self.name_to_nd['x']
-        nd_y = self.name_to_nd['y']
+        nd_w = self.nn_to_nd['w']
+        nd_x = self.nn_to_nd['x']
+        nd_y = self.nn_to_nd['y']
 
         pot_wxy = in_pot.get_new_marginal([nd_w, nd_x, nd_y])
         pot_wx = pot_wxy.get_new_marginal([nd_w, nd_x])
         pot_w = pot_wx.get_new_marginal([nd_w])
-        pot_yx = ((pot_wxy/pot_wx)*pot_w).get_new_marginal([nd_y, nd_x])
-        final_pot = pot_yx*pot_wx
+        pot_yx = ((pot_wxy / pot_wx) * pot_w).get_new_marginal([nd_y, nd_x])
+        final_pot = pot_yx * pot_wx
         return final_pot
-
