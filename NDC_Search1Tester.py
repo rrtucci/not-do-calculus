@@ -7,7 +7,7 @@ class NDC_SearchTester(NDC_Tester):
     This class is a subclass of the abstract class NDC_Tester. It overrides
     the method calc_adj_prob_y_bar_x(). This class uses within method
     calc_adj_prob_y_bar_x(), an input object `adj_bnet_maker` of class
-    NDC_AdjBnetMaker. Objects of this class are created within NDC_Searcher
+    NDC_AdjBnetMaker. Objects of this class are created within NDC_Searcher1
     to search for valid AF.
 
 

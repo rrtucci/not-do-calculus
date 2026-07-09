@@ -1,5 +1,6 @@
 from numpy.lib.stride_tricks import broadcast_to
 from NDC_BnetMaker import *
+from NDC_global_funs import get_nn_to_sub, bnet_has_x_parent_that_is_hidden
 
 
 class NDC_AdjBnetMaker(NDC_BnetMaker):
@@ -55,62 +56,13 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
 
         self.bnet_maker = bnet_maker
         self.subs = subs
-        self.nn_to_sub = NDC_AdjBnetMaker.get_nn_to_sub(self.nns,
-                                                        self.hidden_nns,
-                                                        subs)
+        self.nn_to_sub = get_nn_to_sub(self.nns,
+                                       self.hidden_nns,
+                                       subs)
 
         self.bnet, self.nn_to_nd = self.create_random_bnet()
         self.calc_full_and_ampu_pots()
         self.calc_full_and_ampu_probs()
-
-    @staticmethod
-    def get_nn_to_sub(nns, hidden_nns, subs):
-        """
-        This static method return a dict mapping every nn to its substitute
-        str. If nn has no substitute because its a non-hidden (observed node),
-        then nn is mapped to itself.
-
-        Parameters
-        ----------
-        nns: list[str]
-            list of all node names
-        hidden_nns: list[str]
-            list of hidden node names
-        subs: list[str]
-            list of substitutes  for hidden_nns. subs[k] is the substitute
-            for hidden_nns[k].
-
-        Returns
-        -------
-        dict[str, str]
-
-        """
-        nn_to_sub = \
-            {nn: nn for nn in nns}
-        for k in range(len(hidden_nns)):
-            nn_to_sub[hidden_nns[k]] = subs[k]
-        return nn_to_sub
-
-    @staticmethod
-    def bnet_has_x_parent_that_is_hidden(arrows, hidden_nns):
-        """
-        This method returns True iff there is at least one arrow pointing
-        from a hidden node to the "x" node.
-
-        Parameters
-        ----------
-        arrows: list[tuple(str, str)]
-        hidden_nns: list[str]
-
-        Returns
-        -------
-        bool
-
-        """
-        for arrow in arrows:
-            if arrow[1] == "x" and arrow[0] in hidden_nns:
-                return True
-        return False
 
     def create_random_bnet(self):
         """
@@ -128,9 +80,8 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
         BayesNet, dict[str, BayesNode]
 
         """
-        if not NDC_AdjBnetMaker. \
-                bnet_has_x_parent_that_is_hidden(self.arrows,
-                                                 self.hidden_nns):
+        if not bnet_has_x_parent_that_is_hidden(self.arrows,
+                                                self.hidden_nns):
             new_bnet = self.bnet_maker.bnet
             nn_to_new_nd = {name: new_bnet.get_node_named(name)
                             for name in self.nns}
