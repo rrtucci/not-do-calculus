@@ -110,7 +110,7 @@ class NDC_Searcher:
         """
         hidden_nns = self.bnet_maker.hidden_nns
         num_hidden_nns = len(hidden_nns)
-        non_hidden_nns = [x for x in self.bnet_maker.nns if x not in
+        non_hidden_nns = [nn for nn in self.bnet_maker.nns if nn not in
                           hidden_nns]
 
         for subs in product(non_hidden_nns, repeat=num_hidden_nns):
