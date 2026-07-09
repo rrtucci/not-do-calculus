@@ -2,7 +2,7 @@ from NDC_Tester import *
 from NDC_AdjBnetMaker import *
 
 
-class NDC_SearchTester(NDC_Tester):
+class NDC_Search1Tester(NDC_Tester):
     """
     This class is a subclass of the abstract class NDC_Tester. It overrides
     the method calc_adj_prob_y_bar_x(). This class uses within method

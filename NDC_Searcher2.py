@@ -1,9 +1,11 @@
 from itertools import product
 from NDC_BnetMaker import *
+from NDC_Searcher import *
 from NDC_Search2Tester import *
+from NDC_global_funs import bnet_has_x_parent_that_is_hidden
 
 
-class NDC_Searcher2:
+class NDC_Searcher2(NDC_Searcher):
 
     def __init__(self, bnet_maker):
         """
@@ -13,14 +15,12 @@ class NDC_Searcher2:
         ----------
         bnet_maker: NDC_BnetMaker
         """
-        self.bnet_maker = bnet_maker
+        NDC_Searcher.__init__(self, bnet_maker)
 
     def conduct_search(self, verbose):
         """
-
-        Parameters
-        ----------
-        verbose: bool
+        This method overrides its namesake abstract method. See description
+        of this method in docstring for NDC_Searcher.conduct_search()
 
         Returns
         -------
@@ -28,22 +28,46 @@ class NDC_Searcher2:
 
         """
         if not bnet_has_x_parent_that_is_hidden(self.bnet_maker.arrows,
-                                                self.bnet_maker.hidden_nns):
-            print("No substitution is necessary")
+                                            self.bnet_maker.hidden_nns):
             subs = []
-            tester = NDC_Search2Tester(self.bnet_maker,
-                                       subs)
+            print("===================")
+            print("No substitution is necessary.")
+            tester = NDC_Search2Tester(self.bnet_maker, subs)
             tester.print_adj_report(False)
             return
-
         hidden_nns = self.bnet_maker.hidden_nns
         num_hidden_nns = len(hidden_nns)
         non_hidden_xy_nns = [nn for nn in self.bnet_maker.nns if nn not in
-                             hidden_nns + ["x", "y"]]
+                          hidden_nns + ["x", "y"] ]
 
         for subs in product(non_hidden_xy_nns, repeat=num_hidden_nns):
             subs = list(subs)
+            plausible_subs = self.substitution_is_plausible(subs)
+            if plausible_subs:
+                print("===================")
+                print(f"{self.bnet_maker.hidden_nns}>{subs}"
+                      f" is a PLAUSIBLE substitution")
+                tester = NDC_Search2Tester(self.bnet_maker, subs)
+                tester.print_adj_report(False)
+            else:
+                if verbose:
+                    print("===================")
+                    print(f"{self.bnet_maker.hidden_nns}>{subs}"
+                          f" is a NON-PLAUSIBLE substitution")
 
-            tester = NDC_Search2Tester(self.bnet_maker,
-                                       subs)
-            tester.print_adj_report(False)
+
+    def substitution_is_plausible(self, subs):
+        """
+        This method overrides its namesake abstract method. It returns True
+        iff subs is a plausible substitution.
+
+        Parameters
+        ----------
+        subs: list[str]
+
+        Returns
+        -------
+        bool
+
+        """
+        return len(subs) == len(set(subs))

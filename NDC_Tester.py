@@ -5,7 +5,7 @@ class NDC_Tester:
     """
     This class is an abstract class because its method
     calc_adj_prob_y_bar_x() is abstract; i.e., must be overridden by
-    subclasses. The classes NDC_CaseTester and NDC_SearchTester are
+    subclasses. The classes NDC_CaseTester and NDC_Search1Tester are
     subclasses of this class. The purpose of this class is to test
     adjustment formulae (AF). The AF is said to be valid if the numpy arrays
 

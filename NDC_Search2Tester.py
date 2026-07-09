@@ -43,7 +43,6 @@ class NDC_Search2Tester(NDC_Tester):
         Potential
 
         """
-
         nd_x = self.nn_to_nd['x']
         nd_y = self.nn_to_nd['y']
         hidden_nds = [self.nn_to_nd[h_nn] for h_nn in

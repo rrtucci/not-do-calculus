@@ -31,3 +31,19 @@ class NDC_Searcher:
 
         """
         assert False
+
+    def substitution_is_plausible(self, subs):
+        """
+        This abstract method must be overridden by the subclasses of this
+        abstract class. The method should return True iff subs is a
+        plausible substitution.
+
+        Parameters
+        ----------
+        subs: list[str]
+
+        Returns
+        -------
+        bool
+
+        """

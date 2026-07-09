@@ -1,10 +1,9 @@
 from NDC_Searcher import *
-from itertools import product
+from NDC_Search1Tester import *
 from NDC_BnetMaker import *
 from NDC_AdjBnetMaker import *
-from NDC_Search1Tester import *
+from itertools import product
 from NDC_global_funs import get_nn_to_parents
-from NDC_global_funs import substitution_is_plausible
 from NDC_global_funs import get_nn_to_sub
 
 
@@ -56,19 +55,8 @@ class NDC_Searcher1(NDC_Searcher):
                           hidden_nns]
 
         for subs in product(non_hidden_nns, repeat=num_hidden_nns):
-
             subs = list(subs)
-
-            nn_to_parents = get_nn_to_parents(
-                self.bnet_maker.arrows, self.bnet_maker.nns)
-            nn_to_sub = get_nn_to_sub(
-                self.bnet_maker.nns,
-                self.bnet_maker.hidden_nns,
-                subs
-            )
-
-            plausible_subs = substitution_is_plausible(
-                nn_to_parents, nn_to_sub)
+            plausible_subs = self.substitution_is_plausible(subs)
             if plausible_subs:
                 print("===================")
                 print(f"{self.bnet_maker.hidden_nns}>{subs}"
@@ -78,8 +66,8 @@ class NDC_Searcher1(NDC_Searcher):
                 else:
                     self.adj_bnet_maker = NDC_AdjBnetMaker(self.bnet_maker,
                                                        subs)
-                tester = NDC_SearchTester(self.bnet_maker,
-                                          self.adj_bnet_maker)
+                tester = NDC_Search1Tester(self.bnet_maker,
+                                           self.adj_bnet_maker)
                 tester.print_adj_report(False)
             else:
                 if verbose:
@@ -87,6 +75,37 @@ class NDC_Searcher1(NDC_Searcher):
                     print(f"{self.bnet_maker.hidden_nns}>{subs}"
                           f" is a NON-PLAUSIBLE substitution")
 
+    def substitution_is_plausible(self, subs):
+        """
+        This method overrides its namesake abstract method. It returns True
+        iff subs is a plausible substitution.
+
+        Parameters
+        ----------
+        subs: list[str]
+
+        Returns
+        -------
+        bool
+
+        """
+        nn_to_parents = get_nn_to_parents(
+            self.bnet_maker.arrows, self.bnet_maker.nns)
+        nn_to_sub = get_nn_to_sub(
+            self.bnet_maker.nns,
+            self.bnet_maker.hidden_nns,
+            subs
+        )
+        plausible = True
+        for nn, parents in nn_to_parents.items():
+            sub_parents = [nn_to_sub[nn] for nn in parents]
+            # print("czvb, nn, parents, sub_parents", nn, parents, sub_parents)
+            if len(sub_parents) != len(set(sub_parents)):
+                plausible = False
+                break
+        # print("xxcv", "plausible", plausible)
+        # print()
+        return plausible
 
 if __name__ == "__main__":
     def main_backdoor(verbose):
