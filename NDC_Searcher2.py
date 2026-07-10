@@ -71,3 +71,68 @@ class NDC_Searcher2(NDC_Searcher):
 
         """
         return len(subs) == len(set(subs))
+
+if __name__ == "__main__":
+    def main_backdoor(verbose):
+        """
+        Parameters
+        ----------
+        verbose: bool
+
+        Returns
+        -------
+        None
+
+        """
+        dot_file = "dot_atlas/back-door.dot"
+        nns, arrows = DotTool.read_dot_file(dot_file)
+        bnet_maker = NDC_BnetMaker(nns,
+                                   arrows,
+                                   hidden_nns=[])
+        searcher = NDC_Searcher2(bnet_maker)
+        searcher.conduct_search(verbose=verbose)
+
+
+    def main_frontdoor(verbose):
+        """
+        Parameters
+        ----------
+        verbose: bool
+
+        Returns
+        -------
+        None
+
+        """
+        dot_file = "dot_atlas/front-door.dot"
+        nns, arrows = DotTool.read_dot_file(dot_file)
+        bnet_maker = NDC_BnetMaker(nns,
+                                   arrows,
+                                   hidden_nns=["h"])
+        searcher = NDC_Searcher2(bnet_maker)
+        searcher.conduct_search(verbose=verbose)
+
+
+    def main_napkin(verbose):
+        """
+        Parameters
+        ----------
+        verbose: bool
+
+        Returns
+        -------
+        None
+,
+        """
+        dot_file = "dot_atlas/napkin.dot"
+        nns, arrows = DotTool.read_dot_file(dot_file)
+        bnet_maker = NDC_BnetMaker(nns,
+                                   arrows,
+                                   hidden_nns=["u_1", "u_2"])
+        searcher = NDC_Searcher2(bnet_maker)
+        searcher.conduct_search(verbose=verbose)
+
+
+    # main_backdoor(True)
+    # main_frontdoor(True)
+    main_napkin(True)
