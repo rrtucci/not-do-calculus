@@ -14,7 +14,7 @@ class NDC_CaseTester(NDC_Tester):
     adj_ampu_prob_y_bar_x: np.array
         P(y|x) for adjustment, calculated from the amputated bnet
     adj_case: NDC_Cases
-        an object of NCD_Cases
+        an object of NDC_Cases
     adj_full_prob_y_bar_x: np.array
         P(y|x) for adjustment, calculated from the full bnet
 
@@ -64,7 +64,7 @@ class NDC_CaseTester(NDC_Tester):
         """
         This method calculates P(y|x) for the adjustment, from either
         in_pot= full_pot or ampu_pot. It does this using
-        self.adj_case.adj_pot_method()
+        self.adj_case.adj_pot_function()
 
         Returns
         -------
@@ -72,9 +72,9 @@ class NDC_CaseTester(NDC_Tester):
 
         """
         self.adj_ampu_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
-            self.adj_case.adj_pot_method(self.bnet_maker.ampu_pot))
+            self.adj_case.adj_pot_function(self.bnet_maker.ampu_pot))
         self.adj_full_prob_y_bar_x = self.bnet_maker.get_prob_y_bar_x(
-            self.adj_case.adj_pot_method(self.bnet_maker.full_pot))
+            self.adj_case.adj_pot_function(self.bnet_maker.full_pot))
 
 
 if __name__ == "__main__":

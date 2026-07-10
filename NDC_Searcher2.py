@@ -6,6 +6,22 @@ from NDC_global_funs import bnet_has_x_parent_that_is_hidden
 
 
 class NDC_Searcher2(NDC_Searcher):
+    """
+    This class is a subclass of the abstract class NDC_Searcher. Its purpose
+    is to test the validity of each adjustment in a set of plausible ones.
+
+    The adjustment considered here is of the form
+
+    P(y|do(x)) = \frac{1}{\sum_y numer} \sum_{u, v} P(x,y|u, v) P(u)P(v)
+
+    where we are assuming there are two hidden nodes h1 and h2 which are
+    replaced by u and v, respectively
+
+
+    Attributes
+    ----------
+    bnet_maker: NDC_BnetMaker
+    """
 
     def __init__(self, bnet_maker):
         """

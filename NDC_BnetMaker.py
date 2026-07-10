@@ -34,7 +34,7 @@ class NDC_BnetMaker:
     full_prob_y_bar_x: np.array
         P(y|x) numpy array calculated from full_pot
     hidden_nns: list[str]
-        list on nns (node names) of hidden nodes
+        list of nns (node names) of hidden nodes
     import_bnet: bool
         if import_bnet == True, `bnet` is constructed by this method. If
         import_bnet == False, `bnet` is built externally and passed in to
@@ -44,16 +44,17 @@ class NDC_BnetMaker:
     nn_to_size: dict[str, int] | None
         dict mapping each node name (nn) to its size. This input need only
         be a partial list of those nodes that you don't want to have default
-        sizes. Default sizes are 2 for non-hidden nodes and 3 for hidden
-        ones. For the method `fill_node_to_size( )`, the input `nn_to_size`
-        takes as input a partial nn_to_size and returns a complete one.
+        sizes. Default sizes are 2 for non-hidden (observed) nodes and 3 for
+        hidden ones. For the method `fill_node_to_size( )`, the input
+        `nn_to_size` takes as input a partial nn_to_size and returns a
+        complete one.
     nns: list[str]
-        list of all the node names example.
+        list of all the node names.
     other_cond: str | None
-        If we are only consdering P(y|do(x)), this string should be empty.
-        If we want to consider P(y|do(x), z), the other_cond= "z"
+        If we are only considering P(y|do(x)), this string should be empty.
+        If we want to consider P(y|do(x), z), then other_cond= "z"
     sample_num: int
-     sample number. this number starts at 1 and after re-randomizing the bnet,
+     sample number. This number starts at 1 and after re-randomizing the bnet,
      it becomes 2.
 
     """
@@ -99,12 +100,12 @@ class NDC_BnetMaker:
 
     def fill_nn_to_size(self, nn_to_size):
         """
-        This method compiles the list of node names from the dot file
-        `dot_file`. It then produces a default dict `nn_to_size1` that maps
-        hidden nodes to 3 (i.e., they will have 3 states) and non-hidden
-        ones to 2. Then the method overrides `nn_to_size1` with the request
-        of `nn_to_size` whenever they disagree. Finally, the method returns
-        `nn_to_size1`
+        This method takes as input a partial nn_to_size and returns a full
+        one. It first creates a default dict `nn_to_size1` that maps hidden
+        nodes to 3 (i.e., they will have 3 states) and non-hidden ones to 2.
+        Then the method overwrites `nn_to_size1` with the request of the
+        input `nn_to_size` wherever they disagree. Finally, the method
+        returns the edited `nn_to_size1`
 
         Parameters
         ----------
@@ -131,14 +132,15 @@ class NDC_BnetMaker:
     def create_random_bnet(self):
 
         """
+
         This method returns a BayesNet object whose structure is given by
-        'nodes' and 'arrows'. The TPM (transition probability matrix, a.k.a.
-        CPT, conditional probability table) for each node is created at random,
-        with the only other constraint being that the number of states of each
-        node be as specified by the input 'nn_to_size'.
+        'nns' and 'arrows'. The TPM (transition probability matrix, a.k.a.
+        CPT, conditional probability table) for each node is created at
+        random, with the only other constraint being that the number of
+        states of each node be as specified by the input 'nn_to_size'.
 
         Besides a BayesNet object, this method returns a dict `nn_to_nd` (
-        map of node name to BayesNode) which is very useful and easy to
+        map of node name to BayesNode). This dict is very useful and easy to
         create from a BayesNet
 
         Returns
@@ -185,13 +187,13 @@ class NDC_BnetMaker:
         """
         This method randomizes (i.e., replaces by random ones) the CPT (
         Conditional Probability Tables) of nodes in the list
-        `some_node_names` in the BayesNet object `bnet`.
+        `some_node_names` in the BayesNet object `self.bnet`.
 
         Parameters
         ----------
         some_node_names: list[str]
             This is a partial list of node names. Normally one uses for this a
-            list of the nodes that are hidden.
+            list of the hidden nns.
 
         Returns
         -------
@@ -210,13 +212,13 @@ class NDC_BnetMaker:
         """
         This method calculates two potentials
 
-        (1) `full_pot` forb "full" bnet
+        (1) `full_pot` for the "full" bnet
 
         (2) `ampu_pot` for the "ampu" (amputated) bnet. By amputated bnet,
         we mean a bnet whose arrows entering node "x" are amputated.
 
          Remember, a Potential can be thought of an arbitrary function f(x,
-         y,z, ...) where `x,y,z, ...` are a partial list of the nodes of the
+         y,z, ...) where `x,y,z, ...` is a partial list of the nodes of the
          bnet. A Potential is usually used to carry either a joint
          probability distribution like P(x,y, z, ...) or a conditional one
          like P(y| x, z, ...).
@@ -265,7 +267,9 @@ class NDC_BnetMaker:
         with in_pot == ampu_pot and in_pot == full_pot. `ampu_prob_y_bar_x`
         equals P( y|do(x)).
 
-        If other_cond = "z",
+        If other_cond = None, it calculates a probability P(y|x)
+
+        If other_cond = "z", it calculates a probability P(y|x, z)
 
         Parameters
         ----------

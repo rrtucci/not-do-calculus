@@ -1,25 +1,18 @@
-"""
-
-1 to 5 return a P(y|x). 6 returns a P(y|x, z)
-
-
-"""
-
-
 class NDC_Cases:
     """
-    This class is a collection of different adjustments for thr bnets
-    backdoor, frontdoor and napkin so far. When there are more than one AF
-    for a bnet (e.g., napkin) the various AF are given an adjustment version
-    adj_version. For each AF, there is a method in this class that returns a
-    full pot. That full pot method is called by NDC_CaseTester.
+    This class is a collection of different adjustments for the bnets 
+    backdoor, frontdoor and napkin. When there is more than one adjustment 
+    for a bnet (e.g., napkin) the various adjustments are given an 
+    adjustment version adj_version. For each adjustment, there is a method 
+    in this class that returns a pot. That pot returning function is called 
+    by NDC_CaseTester.
 
 
     Attributes
     ----------
-    adj_pot_method: Function
-        method that returns a full pot. This method has several
-        adj_pot_method. For example, adj_pot_method = get_backdoor_adj_pot
+    adj_pot_function: Function
+        method that returns a pot. For example, adj_pot_function =
+        get_backdoor_adj_pot
     adj_version: int
         adjustment version. This int is used to distinguish between several
         adjustments for the same bnet. For example, napkin has several
@@ -29,9 +22,10 @@ class NDC_Cases:
     has_other_cond: bool
         whether there is another condition. If there isn't we are
         calculating P(y|x). If there is and other_cond = 'z', we are
-        calculating P(y|x, z).  has_other_cond = True for napkin adj_version=4
+        calculating P(y|x, z).  For example, has_other_cond = True for napkin
+        adj_version=4
     nn_to_nd: dict[str, BayesNode]
-        dict mapping a node name (nn) to its nd (BayesNode)
+        dict mapping a nn (node name) to its nd (BayesNode)
 
 
     """
@@ -52,14 +46,14 @@ class NDC_Cases:
         self.nn_to_nd = nn_to_nd
         self.dot_file = dot_file
         self.adj_version = adj_version
-        self.adj_pot_method = None
+        self.adj_pot_function = None
         self.has_other_cond = False
-        self.set_adj_pot_method()
+        self.set_adj_pot_function()
 
-    def set_adj_pot_method(self):
+    def set_adj_pot_function(self):
         """
-        This method decides from self.doc_file and self. adj_version,
-        what should be the self.adj_pot_method and returns the latter.
+        This method decides from self.dot_file and self.adj_version,
+        what should be the self.adj_pot_function and returns the latter.
         It also sets self.has_other_cond
 
         Returns
@@ -68,7 +62,7 @@ class NDC_Cases:
 
         """
         dotf_strings = ["back-door", "front-door", "napkin"]
-        adj_id_to_adj_method = {
+        adj_id_to_adj_pot_function = {
             "back-door1": self.get_backdoor_adj_pot,
             "front-door1": self.get_frontdoor_adj_pot,
             "napkin1": self.get_napkin1_adj_pot,
@@ -78,18 +72,18 @@ class NDC_Cases:
             "napkin5": self.get_napkin5_adj_pot
         }
 
-        adj_method = None
+        adj_pot_function = None
         has_other_cond = False
         for dotf_str in dotf_strings:
             if dotf_str in self.dot_file:
                 adj_id = dotf_str + str(self.adj_version)
-                adj_method = adj_id_to_adj_method[adj_id]
+                adj_pot_function = adj_id_to_adj_pot_function[adj_id]
                 if adj_id in ["napkin4"]:
                     has_other_cond = True
                 break
-        if not adj_method:
-            assert None, "No adjustment method found"
-        self.adj_pot_method = adj_method
+        if not adj_pot_function:
+            assert None, "No adjustment pot function found"
+        self.adj_pot_function = adj_pot_function
         self.has_other_cond = has_other_cond
 
     def get_backdoor_adj_pot(self, in_pot):

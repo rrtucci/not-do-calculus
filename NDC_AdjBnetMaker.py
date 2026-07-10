@@ -13,20 +13,20 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
     Attributes
     ----------
     bnet: BayesNet
-        BayesNet object created by `create_random_bnet`. BayesNet or bnet
+        BayesNet object created by `create_random_bnet()`. BayesNet or bnet
         stand for Bayesian network.
-    bnet_maker: BnetMaker
-        bnet_maker.net is used to create self.bnet
+    bnet_maker: NDC_BnetMaker
+        bnet_maker.bnet is used to create self.bnet
     nn_to_nd: dict[str, BayesNode]
         dict mapping node name (nn) to node (nd). nd is an object of BayesNode
     nn_to_sub: dict[str, str]
-        dict mapping each node name to its substitute name. Those nodes which
+        dict mapping each node name to its substitute name. The nodes which
         are not being substituted are mapped to themselves.
     subs: list[str]
         list of substitutions. self.hidden_nns is a list of the names of the
-        hidden nodes, and subs is a list of their substitutes in the
-        same order, so that subs[k] is the substitute of self.hidden_nns[k].
-        self.hidden_nns and subs have the same length, of course.
+        hidden nodes, and subs is a list of their substitutes, so that subs[
+        k] is the substitute of self.hidden_nns[k]. self.hidden_nns and subs
+        have the same length, of course.
 
 
     """
@@ -43,8 +43,13 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
         ----------
         bnet_maker: NDC_BnetMaker
         subs: list[str]
+            list of substitutions
         nn_to_size: dict[str, int]
+            dict mapping each node name (nn) to its size. Default sizes are
+            2 for non-hidden (observed) nodes and 3 for hidden ones.
         other_cond: str
+            If this equals "", then we consider P(y|x). If it equals "z",
+            we consider P(y|x, z)
         """
         NDC_BnetMaker.__init__(self,
                                bnet_maker.nns,
@@ -66,14 +71,16 @@ class NDC_AdjBnetMaker(NDC_BnetMaker):
 
     def create_random_bnet(self):
         """
-        This method creates a BayesNet self.bnet from the BayesNet
-        self.BnetMaker.bnet. It returns self.bnet and a nn_to_nd for that
-        bnet. nn_to_nd is a dict that maps each nn (str)  to its
+        This method overrides the namesake method in the parent class
+        NDC_BnetMaker. The method creates a BayesNet self.bnet from the
+        BayesNet self.BnetMaker.bnet. It returns self.bnet and a nn_to_nd
+        for that bnet.
+
+        nn_to_nd is a dict that maps each nn (str)  to its
         corresponding nd (BayesNode). This map is easily constructed from a
         BayesNet object and is very useful.
 
-        This method overrides the namesake method in the parent class
-        BnetMaker.
+
 
         Returns
         -------

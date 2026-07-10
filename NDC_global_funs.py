@@ -1,3 +1,9 @@
+"""
+This file contains some global functions that are used throughout the NDS
+project.
+"""
+
+
 def get_nn_to_parents(arrows, nns):
     """
     This method returns a dict mapping each nn to the list of names
@@ -47,7 +53,7 @@ def bnet_has_x_parent_that_is_hidden(arrows, hidden_nns):
 def get_nn_to_sub(nns, hidden_nns, subs):
     """
     This method returns a dict mapping every nn to its substitute str. If nn
-    has no substitute because its a non-hidden (observed node), then nn is
+    has no substitute because it's a non-hidden (observed node), then nn is
     mapped to itself.
 
     Parameters
@@ -57,8 +63,7 @@ def get_nn_to_sub(nns, hidden_nns, subs):
     hidden_nns: list[str]
         list of hidden node names
     subs: list[str]
-        list of substitutes  for hidden_nns. subs[k] is the substitute
-        for hidden_nns[k].
+        list of substitutes  subs[k] is the substitute for hidden_nns[k].
 
     Returns
     -------

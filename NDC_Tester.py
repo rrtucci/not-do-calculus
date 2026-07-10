@@ -5,11 +5,10 @@ class NDC_Tester:
     """
     This class is an abstract class because its method
     calc_adj_prob_y_bar_x() is abstract; i.e., must be overridden by
-    subclasses. The classes NDC_CaseTester and NDC_Search1Tester are
-    subclasses of this class. The purpose of this class is to test
-    adjustments. The adjustment is said to be valid if the numpy arrays
+    subclasses. The purpose of this class is to test the validity of
+    adjustments. An adjustment is said to be valid if the numpy arrays
 
-    adj_ampu_prob_y_bar_x
+    ampu_prob_y_bar_x
 
     and
 
@@ -25,10 +24,15 @@ class NDC_Tester:
         calculated from the amputated self.bnet_maker.bnet
     adj_full_prob_y_bar_x: np.array
         the probability P(y|x) for the adjustment under consideration,
-        calculated from the amputated self.bnet_maker.bnet
+        calculated from the full self.bnet_maker.bnet
     bnet_maker: NDC_BnetMaker
-        bnet_maker.bnet is used to calculate the adjustment pot via the
+        bnet_maker.bnet is used to calculate the adjustment P(y|x) via the
         abstract method calc_adj_prob_y_bar_x()
+    re_randomize_hidden_nds: bool
+        This bool is True iff we consider 2 bnets instead of one. The second
+        bnet differs from the first in that the CTPs for the hidden nodes
+        are randomized.
+
     """
 
     def __init__(self,
@@ -40,9 +44,6 @@ class NDC_Tester:
         ----------
         bnet_maker: NDC_BnetMaker
         re_randomize_hidden_nds: bool
-            This bool is True iff we consider 2 bnets instead of one.
-            The second bnet differs from the first in that the CTPs for the
-            hidden nodes are randomized.
         """
         self.bnet_maker = bnet_maker
         self.re_randomize_hidden_nds = re_randomize_hidden_nds
@@ -51,7 +52,15 @@ class NDC_Tester:
 
     def calc_adj_prob_y_bar_x(self):
         """
-        abstract method
+        This is an abstract method. Its purpose is to set
+
+
+        self.adj_ampu_prob_y_bar_x
+
+        and
+
+        self.adj_full_prob_y_bar_x
+
 
         Returns
         -------

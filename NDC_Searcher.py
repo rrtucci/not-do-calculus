@@ -2,6 +2,14 @@ from NDC_BnetMaker import *
 
 
 class NDC_Searcher:
+    """
+    This is an abstract method. All of its methods must be overridden.
+
+    Attributes
+    __________
+    bnet_maker: NDC_BnetMaker
+
+    """
 
     def __init__(self, bnet_maker):
         """
@@ -15,7 +23,7 @@ class NDC_Searcher:
 
     def conduct_search(self, verbose):
         """
-        This abstract method must be overriden by its subclasses. Its
+        This abstract method must be overridden by its subclasses. Its
         purpose is to tests the validity of each adjustment in a set of
         plausible ones. A plausible adjustment is one with a plausible
         substitution `subs`.

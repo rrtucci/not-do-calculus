@@ -4,26 +4,25 @@ from NDC_AdjBnetMaker import *
 
 class NDC_Search1Tester(NDC_Tester):
     """
-    This class is a subclass of the abstract class NDC_Tester. It overrides
-    the method calc_adj_prob_y_bar_x(). This class uses within method
-    calc_adj_prob_y_bar_x(), an input object `adj_bnet_maker` of class
-    NDC_AdjBnetMaker. Objects of this class are created within NDC_Searcher1
-    to search for valid adjustment.
+    This class is a subclass of the abstract class NDC_Tester. Objects of
+    this class are created within NDC_Searcher1 to search for valid
+    adjustments.
 
+    Essentially, this class compares P(y|x) produced from self.bnet_maker (
+    NDC_BnetMaker) and self.adj_bnet_maker (NDC_AdjBnetMaker).
 
     Attributes
     ----------
     adj_ampu_prob_y_bar_x: np.array
-    adj_bnet_maker: NDC_AdjBnetMakerker
+        P(y|x) for adjustment calculated from amputated bnet
+    adj_bnet_maker: NDC_AdjBnetMaker
     adj_full_prob_y_bar_x: np.array
+        P(y|x) for adjustment calculated from full bnet
     """
 
     def __init__(self, bnet_maker, adj_bnet_maker):
         """
         Constructor
-
-        Essentially, this class compares P(y|x) produced from
-        bnet_maker and adj_bnet_maker.
 
         Parameters
         ----------

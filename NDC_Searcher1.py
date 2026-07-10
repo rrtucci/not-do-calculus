@@ -9,13 +9,15 @@ from NDC_global_funs import get_nn_to_sub
 
 class NDC_Searcher1(NDC_Searcher):
     """
-    The purpose of this class is to test the validity of each adjustment in
-    a set of plausible ones. The adjustment is assumed to be the amputated
-    promise obtained by substituting every hidden node by an observed one.
-    `subs` are the substitutions for the hidden node names `hidden_nns`. For
-    example, if "h1" and "h2" are all the hidden node names, and "u" and "v"
-    are observed nns, a possible substitution might be ["h1", "h2"] -> [
-    "u", "v"]
+    This class is a subclass of the abstract class NDC_Searcher. Its purpose
+    is to test the validity of each adjustment in a set of plausible ones.
+    The adjustment is assumed to be the amputated promise obtained by
+    substituting every hidden node by an observed one.
+
+    `subs` are the substitutions for the hidden node names `hidden_nns`.
+    subs[k] equals hidden_nns[k]. For example, if "h1" and "h2" are all the
+    hidden node names, and "u" and "v" are observed nns, a possible
+    substitution might be ["h1", "h2"] -> [ "u", "v"]
 
     DC_AdjBnetMaker is a subclass of NDC_BnetMaker. Both self.adj_bnet_maker
     and self.bnet_maker construct a bnet. The bnet constructed by
