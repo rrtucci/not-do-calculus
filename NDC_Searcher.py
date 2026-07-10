@@ -1,5 +1,6 @@
 from NDC_BnetMaker import *
 
+
 class NDC_Searcher:
 
     def __init__(self, bnet_maker):

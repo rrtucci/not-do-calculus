@@ -8,11 +8,11 @@
 
 class NDC_Cases:
     """
-    This class is a collection of different adjustment formulae (AF) for thr
-    bnets backdoor, frontdoor and napkin so far. When there are more than
-    one AF for a bnet (e.g., napkin) the various AF are given an adjustment
-    version adj_version. For each AF, there is a method in this class that
-    returns a full pot. That full pot method is called by NDC_CaseTester.
+    This class is a collection of different adjustments for thr bnets
+    backdoor, frontdoor and napkin so far. When there are more than one AF
+    for a bnet (e.g., napkin) the various AF are given an adjustment version
+    adj_version. For each AF, there is a method in this class that returns a
+    full pot. That full pot method is called by NDC_CaseTester.
 
 
     Attributes
@@ -22,7 +22,8 @@ class NDC_Cases:
         adj_pot_method. For example, adj_pot_method = get_backdoor_adj_pot
     adj_version: int
         adjustment version. This int is used to distinguish between several
-        AF for the same bnet. For example, napkin has several AF
+        adjustments for the same bnet. For example, napkin has several
+        adjustments.
     dot_file: str
         dot file (i.e., graphviz format) of the OP (Original Promise) bnet.
     has_other_cond: bool

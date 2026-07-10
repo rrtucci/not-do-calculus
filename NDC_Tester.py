@@ -7,7 +7,7 @@ class NDC_Tester:
     calc_adj_prob_y_bar_x() is abstract; i.e., must be overridden by
     subclasses. The classes NDC_CaseTester and NDC_Search1Tester are
     subclasses of this class. The purpose of this class is to test
-    adjustment formulae (AF). The AF is said to be valid if the numpy arrays
+    adjustments. The adjustment is said to be valid if the numpy arrays
 
     adj_ampu_prob_y_bar_x
 
@@ -21,10 +21,10 @@ class NDC_Tester:
     Attributes
     ----------
     adj_ampu_prob_y_bar_x: np.array
-        the probability P(y|x) for the AF under consideration,
+        the probability P(y|x) for the adjustment under consideration,
         calculated from the amputated self.bnet_maker.bnet
     adj_full_prob_y_bar_x: np.array
-        the probability P(y|x) for the AF under consideration,
+        the probability P(y|x) for the adjustment under consideration,
         calculated from the amputated self.bnet_maker.bnet
     bnet_maker: NDC_BnetMaker
         bnet_maker.bnet is used to calculate the adjustment pot via the

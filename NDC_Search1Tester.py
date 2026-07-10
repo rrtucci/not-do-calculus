@@ -8,7 +8,7 @@ class NDC_Search1Tester(NDC_Tester):
     the method calc_adj_prob_y_bar_x(). This class uses within method
     calc_adj_prob_y_bar_x(), an input object `adj_bnet_maker` of class
     NDC_AdjBnetMaker. Objects of this class are created within NDC_Searcher1
-    to search for valid AF.
+    to search for valid adjustment.
 
 
     Attributes

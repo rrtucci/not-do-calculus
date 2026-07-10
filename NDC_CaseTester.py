@@ -35,7 +35,7 @@ class NDC_CaseTester(NDC_Tester):
         re_randomize_hidden_nds: bool
         adj_version: int
             the adjustment formula version. For the Napkin bnet, there are
-            several.
+            several. All except one (adj_version=1) are invalid.
 
         """
         NDC_Tester.__init__(self,
@@ -62,8 +62,9 @@ class NDC_CaseTester(NDC_Tester):
 
     def calc_adj_prob_y_bar_x(self):
         """
-        This method calculates P(y|x) for the AF, from either in_pot= full_pot
-        or ampu_pot. It does this using  self.adj_case.adj_pot_method()
+        This method calculates P(y|x) for the adjustment, from either
+        in_pot= full_pot or ampu_pot. It does this using
+        self.adj_case.adj_pot_method()
 
         Returns
         -------

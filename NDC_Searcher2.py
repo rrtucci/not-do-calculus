@@ -28,7 +28,7 @@ class NDC_Searcher2(NDC_Searcher):
 
         """
         if not bnet_has_x_parent_that_is_hidden(self.bnet_maker.arrows,
-                                            self.bnet_maker.hidden_nns):
+                                                self.bnet_maker.hidden_nns):
             subs = []
             print("===================")
             print("No substitution is necessary.")
@@ -38,7 +38,7 @@ class NDC_Searcher2(NDC_Searcher):
         hidden_nns = self.bnet_maker.hidden_nns
         num_hidden_nns = len(hidden_nns)
         non_hidden_xy_nns = [nn for nn in self.bnet_maker.nns if nn not in
-                          hidden_nns + ["x", "y"] ]
+                             hidden_nns + ["x", "y"]]
 
         for subs in product(non_hidden_xy_nns, repeat=num_hidden_nns):
             subs = list(subs)
@@ -55,7 +55,6 @@ class NDC_Searcher2(NDC_Searcher):
                     print(f"{self.bnet_maker.hidden_nns}>{subs}"
                           f" is a NON-PLAUSIBLE substitution")
 
-
     def substitution_is_plausible(self, subs):
         """
         This method overrides its namesake abstract method. It returns True
@@ -71,6 +70,7 @@ class NDC_Searcher2(NDC_Searcher):
 
         """
         return len(subs) == len(set(subs))
+
 
 if __name__ == "__main__":
     def main_backdoor(verbose):

@@ -44,9 +44,6 @@ def bnet_has_x_parent_that_is_hidden(arrows, hidden_nns):
     return False
 
 
-
-
-
 def get_nn_to_sub(nns, hidden_nns, subs):
     """
     This method returns a dict mapping every nn to its substitute str. If nn

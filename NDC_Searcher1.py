@@ -65,7 +65,7 @@ class NDC_Searcher1(NDC_Searcher):
                     self.adj_bnet_maker = self.bnet_maker
                 else:
                     self.adj_bnet_maker = NDC_AdjBnetMaker(self.bnet_maker,
-                                                       subs)
+                                                           subs)
                 tester = NDC_Search1Tester(self.bnet_maker,
                                            self.adj_bnet_maker)
                 tester.print_adj_report(False)
@@ -106,6 +106,7 @@ class NDC_Searcher1(NDC_Searcher):
         # print("xxcv", "plausible", plausible)
         # print()
         return plausible
+
 
 if __name__ == "__main__":
     def main_backdoor(verbose):
