@@ -100,13 +100,13 @@ OP bnet by observed nodes, and then amputates that (i.e. removes arrows
 
 Both **search1** and **search2** are
 hardwired to find the backdoor adjustment
-formula so that is no big feat.
+formula so that is no big feat. If in the OP,  there is no arrow from a 
+hidden node to "x",
+the backdoor adjustment formula is obviously valid.
+
 
 * **search1** finds the front-door adjustment
 formula but not the napkin adjustment one.
-If in the OP,  there is no arrow from a 
-hidden node to "x",
-the backdoor adjustment formula is obviously valid.
 
 * **search2** finds the napkin adjustment
 formula but not the front-door adjustment one.
