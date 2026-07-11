@@ -100,11 +100,15 @@ OP bnet by observed nodes, and then amputates that (i.e. removes arrows
 
 Both **search1** and **search2** are
 hardwired to find the backdoor adjustment
-formula so that is no big success.
+formula so that is no big feat.
 
 * **search1** finds the front-door adjustment
 formula but not the napkin adjustment one.
 
 * **search2** finds the napkin adjustment
 formula but not the front-door adjustment one.
+
+All this is illustrated by
+the numerous jupyter notebooks
+included in this repo.(see the jupyter-notebooks folder)
 
