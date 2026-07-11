@@ -93,7 +93,7 @@ OP bnet by observed nodes, and then amputates that (i.e. removes arrows
    v) P(u)P(v)$$
 
     where we are assuming there are two hidden nodes h1 and h2 which are
-    replaced by u and v, respectively 
+    replaced by observed nodes u and v, respectively 
 
 
 ## Our Findings
