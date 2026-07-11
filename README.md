@@ -104,6 +104,9 @@ formula so that is no big feat.
 
 * **search1** finds the front-door adjustment
 formula but not the napkin adjustment one.
+If in the OP,  there is no arrow from a 
+hidden node to "x",
+the backdoor adjustment formula is obviously valid.
 
 * **search2** finds the napkin adjustment
 formula but not the front-door adjustment one.
