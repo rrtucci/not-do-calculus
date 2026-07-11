@@ -21,7 +21,7 @@ search and discover adjustment formulae.
 The code in this repo is written
 in a fully object oriented style.
 I feel this is appropriate, because,
-if in the future, I or someone comes
+if in the future, I or someone else comes
 up with a better adjustment search
 method (the software currently 
 has 2 search methods, **search1** and **search2**), 
