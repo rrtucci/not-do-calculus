@@ -16,7 +16,7 @@ software can do plus much more. Whereas the
 earlier software could only verify
 whether a given adjustment formula
 was valid, this software can also
-search and discover adjustment formulae.
+search for and discover adjustment formulae.
 
 The code in this repo is written
 in a fully object oriented style.
