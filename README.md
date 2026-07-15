@@ -115,3 +115,20 @@ All this is illustrated by
 the numerous jupyter notebooks
 included in this repo.(see the jupyter-notebooks folder)
 
+Here are some of the pics included in the jupyter notebooks:
+
+<img src="pics/frontdoor.jpg" alt="frontdoor" height="250">
+
+**proof**:
+
+This adjustment formula is discovered and proven valid by **search1**
+
+**QED**
+
+<img src="pics/napkin1.jpg" alt="frontdoor" height="250">
+
+**proof**:
+
+This adjustment formula is discovered and proven valid by **search2**
+
+**QED**
