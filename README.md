@@ -121,7 +121,8 @@ Here are some of the pics included in the jupyter notebooks:
 
 **proof**:
 
-This adjustment formula is discovered and proven valid by **search1**
+This adjustment formula is for the front-door bnet. It is rediscovered and 
+proven valid by **search1**
 
 **QED**
 
@@ -129,6 +130,7 @@ This adjustment formula is discovered and proven valid by **search1**
 
 **proof**:
 
-This adjustment formula is discovered and proven valid by **search2**
+This adjustment formula is for the Napkin bnet. It is rediscovered and proven 
+valid by **search2**
 
 **QED**
